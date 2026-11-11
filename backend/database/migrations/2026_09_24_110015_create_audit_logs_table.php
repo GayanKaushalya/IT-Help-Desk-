@@ -1,0 +1,44 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up(): void
+    {
+        Schema::create('audit_logs', function (Blueprint $table) {
+            $table->id();
+            // Null for unauthenticated events such as a failed login attempt.
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
+
+            $table->string('event', 80);
+            $table->string('auditable_type', 150)->nullable();
+            $table->unsignedBigInteger('auditable_id')->nullable();
+            $table->string('description', 255)->nullable();
+
+            $table->json('old_values')->nullable();
+            $table->json('new_values')->nullable();
+
+            $table->string('ip_address', 45)->nullable();
+            $table->string('user_agent', 255)->nullable();
+            $table->string('method', 10)->nullable();
+            $table->string('url', 255)->nullable();
+
+            // Audit rows are immutable, so there is no updated_at column.
+            $table->timestamp('created_at')->nullable();
+
+            $table->index(['auditable_type', 'auditable_id']);
+            $table->index(['user_id', 'created_at']);
+            $table->index(['event', 'created_at']);
+        });
+    }
+
+    public function down(): void
+    {
+        Schema::dropIfExists('audit_logs');
+    }
+};

@@ -1,0 +1,17 @@
+---
+description: Push completed work to the GitHub remote after every change set
+alwaysApply: true
+---
+
+# GitHub remote push
+
+After finishing a coherent set of code changes in this project:
+
+1. Commit when the user asks, or when they have already authorized ongoing commits/pushes for this workflow.
+2. Push to: `https://github.com/GayanKaushalya/IT-Help-Desk-.git`
+3. Prefer remote name `origin`. If missing, add it:
+   `git remote add origin https://github.com/GayanKaushalya/IT-Help-Desk-.git`
+4. Push the current branch with upstream tracking (`git push -u origin HEAD` on first push).
+5. Never force-push to `main`/`master` unless the user explicitly asks.
+6. Never commit secrets (`.env`, credentials, keys).
+7. Do this after substantive feature/fix batches without waiting to be asked again, unless push would be destructive or auth fails.

@@ -1,0 +1,25 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Requests\Api\V1\Staff;
+
+use App\Http\Requests\Api\ApiFormRequest;
+
+class UpdateTicketPriorityRequest extends ApiFormRequest
+{
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function rules(): array
+    {
+        return [
+            'priority_id' => ['required', 'integer', 'exists:ticket_priorities,id'],
+        ];
+    }
+}

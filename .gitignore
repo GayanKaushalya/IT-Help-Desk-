@@ -1,0 +1,36 @@
+# Dependencies and build output are managed inside each application
+backend/vendor/
+backend/node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Environment files must never be committed
+.env
+.env.*
+!.env.example
+backend/.env
+frontend/.env
+
+# Local artefacts
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Laravel runtime
+backend/storage/logs/
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/storage/app/public/
+backend/bootstrap/cache/*.php
+!backend/bootstrap/cache/.gitignore
+!backend/storage/logs/.gitignore
+!backend/storage/framework/**/.gitignore
+
+# Agent / local tooling noise
+.cursor/projects/
+**/agent-transcripts/
+**/terminals/
