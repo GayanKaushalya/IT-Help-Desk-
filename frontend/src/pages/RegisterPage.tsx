@@ -1,3 +1,4 @@
+import { LifeBuoy } from 'lucide-react'
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
@@ -11,6 +12,7 @@ import { PasswordInput } from '@/components/ui/PasswordInput'
 import { PasswordStrength } from '@/components/ui/PasswordStrength'
 import { Select } from '@/components/ui/Select'
 import { LoadingPanel } from '@/components/ui/Spinner'
+import { env } from '@/config/env'
 import { usePublicLookups } from '@/features/system/useSystemStatus'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
@@ -120,13 +122,13 @@ export function RegisterPage() {
 
   if (lookups.allow_self_registration === false) {
     return (
-      <div className="rounded-[1.35rem] border border-white/20 bg-white/95 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
+      <div className="animate-slide-up">
         <h1 className="text-2xl font-semibold tracking-tight text-surface-900">Registration is closed</h1>
         <p className="mt-2 text-sm text-surface-500">
-          Self-service registration is currently disabled. Contact IT or HR for an Indra Help Desk account.
+          Self-service registration is currently disabled. Contact IT support for an account.
         </p>
-        <div className="mt-6">
-          <Alert tone="warning" title="Ask for access">
+        <div className="mt-8 rounded-card border border-surface-200 bg-panel p-6 shadow-card">
+          <Alert tone="warning" title="Ask IT for access">
             {lookups.support_email
               ? `Reach the service desk at ${lookups.support_email}.`
               : 'Your administrator has turned off new employee sign-up.'}
@@ -143,15 +145,26 @@ export function RegisterPage() {
   }
 
   return (
-    <div className="rounded-[1.35rem] border border-white/20 bg-white/95 p-6 shadow-[0_24px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:p-8">
-      <p className="text-xs font-semibold tracking-[0.18em] text-[#e11d2e] uppercase">New employee</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-surface-900">Create your account</h1>
+    <div className="animate-slide-up">
+      <div className="mb-8 flex items-center gap-2.5 lg:hidden">
+        <span className="flex size-9 items-center justify-center rounded-lg bg-primary-600">
+          <LifeBuoy className="size-5 text-white" />
+        </span>
+        <span className="text-base font-semibold tracking-tight text-surface-900">{env.appName}</span>
+      </div>
+
+      <p className="text-xs font-semibold tracking-[0.18em] text-primary-600 uppercase">
+        New employee
+      </p>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight text-surface-900">
+        Create your account
+      </h1>
       <p className="mt-2 text-sm text-surface-500">
-        Register once for Indra Help Desk. You will be signed in and can open IT or HR support from the
-        desk chooser.
+        Register with your official employee details. You will be signed in as
+        an employee and taken to your dashboard.
       </p>
 
-      <div className="mt-8">
+      <div className="mt-8 rounded-card border border-surface-200 bg-panel p-6 shadow-card sm:p-8">
         {formError && (
           <Alert tone="danger" title="Registration failed" className="mb-6">
             {formError}
