@@ -1,4 +1,4 @@
-import { Info, LockKeyhole, Shield, UserRound, UserPlus } from 'lucide-react'
+import { Info, LockKeyhole, UserRound, UserPlus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
@@ -86,9 +86,12 @@ export function LoginPage() {
   return (
     <div className="auth-glass rounded-[1.35rem] border border-[#5ec8ff]/35 bg-[#071526]/72 p-6 shadow-[0_0_0_1px_rgba(94,200,255,0.12),0_24px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl sm:p-8">
       <div className="flex flex-col items-center text-center">
-        <span className="flex size-14 items-center justify-center rounded-full bg-gradient-to-b from-[#f04343] to-[#c4101c] shadow-[0_8px_24px_rgba(196,16,28,0.45)]">
-          <Shield className="size-7 text-white" aria-hidden />
-        </span>
+        <img
+          src="/images/indra-mark.png"
+          alt="Indra"
+          className="size-16 drop-shadow-[0_8px_24px_rgba(196,16,28,0.5)]"
+          draggable={false}
+        />
         <p className="mt-4 text-[11px] font-semibold tracking-[0.22em] text-white/70 uppercase">
           Secure access
         </p>
