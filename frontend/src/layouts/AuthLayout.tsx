@@ -37,7 +37,7 @@ function LoginAuthShell() {
     <div className="auth-shell relative min-h-screen overflow-hidden bg-[#040b18] text-white">
       <div className="absolute inset-0" aria-hidden>
         <img
-          src="/images/indra-bg-night.jpg"
+          src="/images/indra-bg-clean.jpg"
           alt=""
           className="h-full w-full object-cover object-[52%_center] scale-105"
           draggable={false}
@@ -45,10 +45,11 @@ function LoginAuthShell() {
         <div className="absolute inset-0 bg-[#040b18]/45" />
         <div className="absolute inset-0 bg-gradient-to-r from-[#040b18]/88 via-[#040b18]/55 to-[#040b18]/35" />
         <div className="absolute inset-0 bg-gradient-to-t from-[#040b18]/85 via-transparent to-[#040b18]/40" />
+        {/* Cover red graphic ribbons baked into the source photo */}
+        <div className="absolute top-0 right-0 h-[42%] w-[38%] bg-gradient-to-bl from-[#040b18] via-[#040b18]/75 to-transparent" />
+        <div className="absolute bottom-0 left-0 h-[48%] w-[36%] bg-gradient-to-tr from-[#040b18] via-[#040b18]/80 to-transparent" />
+        <div className="absolute right-0 bottom-0 h-[40%] w-[34%] bg-gradient-to-tl from-[#040b18] via-[#040b18]/75 to-transparent" />
       </div>
-
-      <div className="auth-swoosh auth-swoosh--top" aria-hidden />
-      <div className="auth-swoosh auth-swoosh--bottom" aria-hidden />
 
       <ThemeToggle className="absolute top-4 right-4 z-20 border-white/15 bg-black/30 text-white hover:bg-black/45 hover:text-white" />
 
