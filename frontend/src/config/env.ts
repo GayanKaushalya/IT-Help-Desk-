@@ -14,7 +14,7 @@ function required(name: string, value: string | undefined): string {
 }
 
 export const env = {
-  appName: import.meta.env['VITE_APP_NAME'] ?? 'IT Helpdesk',
+  appName: import.meta.env['VITE_APP_NAME'] ?? 'Indra Help Desk',
   apiBaseUrl: required('VITE_API_BASE_URL', import.meta.env['VITE_API_BASE_URL']),
   isDevelopment: import.meta.env.DEV,
 } as const

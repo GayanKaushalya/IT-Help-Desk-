@@ -89,8 +89,8 @@ export function DeskChooserPage() {
   return (
     <div className="space-y-10">
       <div className="text-center">
-        <h1 className="text-3xl font-semibold tracking-tight text-surface-900 sm:text-4xl">Employee Help Desk</h1>
-        <p className="mt-3 text-base text-surface-600">Welcome! What do you need assistance with today?</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-surface-900 sm:text-4xl">Indra Help Desk</h1>
+        <p className="mt-3 text-base text-surface-600">Welcome — choose IT or HR support for today.</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
