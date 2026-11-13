@@ -231,7 +231,12 @@ export function AdminUserDetailPage() {
         </div>
       </div>
 
-      <UserFormModal isOpen={editOpen} onClose={() => setEditOpen(false)} user={user} />
+      <UserFormModal
+        isOpen={editOpen}
+        onClose={() => setEditOpen(false)}
+        user={user}
+        onIssuedPassword={(_username, password) => setIssued(password)}
+      />
       <TemporaryPasswordDialog
         isOpen={issued !== null}
         username={user.username}

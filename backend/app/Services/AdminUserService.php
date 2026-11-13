@@ -76,10 +76,29 @@ class AdminUserService
 
     /**
      * @param  array<string, mixed>  $data
+     * @return array{user: User, temporary_password: string|null}
      */
-    public function update(User $actor, User $user, array $data): User
+    public function update(User $actor, User $user, array $data): array
     {
         $this->assertCanMutate($actor, $user);
+
+        $issuedPassword = null;
+        if (isset($data['password']) && is_string($data['password']) && $data['password'] !== '') {
+            if ($this->isSelf($actor, $user)) {
+                throw ValidationException::withMessages([
+                    'password' => ['Use your own profile to change your password.'],
+                ]);
+            }
+
+            if (! $actor->hasPermission('users.reset_password')) {
+                throw ValidationException::withMessages([
+                    'password' => ['You are not allowed to set passwords for other users.'],
+                ]);
+            }
+
+            $issuedPassword = $data['password'];
+            unset($data['password']);
+        }
 
         if (isset($data['role_id'])) {
             $role = Role::query()->findOrFail((int) $data['role_id']);
@@ -107,9 +126,28 @@ class AdminUserService
             $user->approved_at = now();
         }
 
+        if ($issuedPassword !== null) {
+            $user->forceFill([
+                'password' => $issuedPassword,
+                'password_changed_at' => now(),
+            ]);
+        }
+
         $original = $user->getOriginal();
         $dirty = $user->getDirty();
+        // Never put the hash into audit newValues.
+        unset($dirty['password']);
         $user->save();
+
+        if ($issuedPassword !== null) {
+            $user->tokens()->delete();
+            $this->audit->log(
+                event: 'user.password_reset',
+                subject: $user,
+                newValues: ['password_changed_at' => now()->toIso8601String()],
+                description: $actor->username.' set a new password for '.$user->username,
+            );
+        }
 
         if ($dirty !== []) {
             $this->audit->log(
@@ -121,7 +159,10 @@ class AdminUserService
             );
         }
 
-        return $user->fresh(['role', 'branch', 'department']) ?? $user;
+        return [
+            'user' => $user->fresh(['role', 'branch', 'department']) ?? $user,
+            'temporary_password' => $issuedPassword,
+        ];
     }
 
     public function activate(User $actor, User $user): User

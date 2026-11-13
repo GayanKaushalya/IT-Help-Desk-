@@ -230,6 +230,31 @@ class AdminUserTest extends TestCase
         $this->assertStringNotContainsString($temporary, $show->getContent());
     }
 
+    public function test_an_administrator_can_set_a_password_while_updating_a_user(): void
+    {
+        Sanctum::actingAs($this->employee);
+        $this->employee->createToken('desk');
+
+        Sanctum::actingAs($this->administrator);
+
+        $plain = 'Helpdesk@2026!';
+
+        $response = $this->patchJson('/api/v1/admin/users/'.$this->employee->id, [
+            'job_title' => 'Front Desk',
+            'password' => $plain,
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.job_title', 'Front Desk')
+            ->assertJsonPath('data.temporary_password', $plain);
+
+        $this->assertTrue(Hash::check($plain, $this->employee->fresh()?->password));
+        $this->assertSame(0, $this->employee->tokens()->count());
+
+        $show = $this->getJson('/api/v1/admin/users/'.$this->employee->id)->assertOk();
+        $this->assertArrayNotHasKey('temporary_password', $show->json('data'));
+        $this->assertStringNotContainsString($plain, $show->getContent());
+    }
+
     public function test_a_technician_cannot_reset_passwords(): void
     {
         Sanctum::actingAs($this->technician);

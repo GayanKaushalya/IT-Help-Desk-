@@ -7,6 +7,7 @@ namespace App\Http\Requests\Api\V1\Admin;
 use App\Http\Requests\Api\ApiFormRequest;
 use App\Models\User;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Rules\Password;
 
 class UpdateUserRequest extends ApiFormRequest
 {
@@ -36,6 +37,7 @@ class UpdateUserRequest extends ApiFormRequest
             'role_id' => ['sometimes', 'required', 'integer', 'exists:roles,id'],
             'branch_id' => ['sometimes', 'required', 'integer', 'exists:branches,id'],
             'department_id' => ['nullable', 'integer', 'exists:departments,id'],
+            'password' => ['nullable', 'string', Password::defaults()],
             'is_active' => ['sometimes', 'boolean'],
             'is_approved' => ['sometimes', 'boolean'],
         ];
@@ -87,6 +89,10 @@ class UpdateUserRequest extends ApiFormRequest
             if (array_key_exists($field, $validated)) {
                 $payload[$field] = (bool) $validated[$field];
             }
+        }
+
+        if (array_key_exists('password', $validated) && is_string($validated['password']) && $validated['password'] !== '') {
+            $payload['password'] = $validated['password'];
         }
 
         return $payload;

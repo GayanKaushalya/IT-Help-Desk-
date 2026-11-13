@@ -66,11 +66,13 @@ class AdminUserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): JsonResponse
     {
-        $updated = $this->users->update($request->user(), $user, $request->payload());
+        $result = $this->users->update($request->user(), $user, $request->payload());
 
         return ApiResponse::success(
-            (new AdminUserResource($updated))->resolve(),
-            'The account has been updated.',
+            $this->userPayload($result['user'], $result['temporary_password']),
+            $result['temporary_password']
+                ? 'The account has been updated. Give the new password to the user once.'
+                : 'The account has been updated.',
         );
     }
 

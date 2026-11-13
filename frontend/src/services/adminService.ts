@@ -47,6 +47,7 @@ export interface AdminUserPayload {
   role_id: number
   branch_id: number
   department_id?: number | null
+  password?: string
   is_active?: boolean
 }
 
