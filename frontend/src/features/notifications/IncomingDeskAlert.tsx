@@ -1,11 +1,12 @@
 import { X } from 'lucide-react'
-import type { ReactNode } from 'react'
+import { useEffect, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 
 import { cn } from '@/utils/cn'
 
 /**
  * Windows-style floating toast for newly arrived desk work.
- * Sits bottom-right so staff can keep working while it appears.
+ * Portaled to document.body so layout stacking cannot hide it.
  */
 export function IncomingDeskAlert({
   isOpen,
@@ -30,20 +31,24 @@ export function IncomingDeskAlert({
   openLabel?: string
   className?: string
 }) {
-  if (!isOpen) return null
+  useEffect(() => {
+    if (!isOpen) return
+    ensureNotificationPermission()
+  }, [isOpen])
 
-  return (
+  if (!isOpen || typeof document === 'undefined') return null
+
+  return createPortal(
     <div
       role="alertdialog"
       aria-live="assertive"
       aria-label={title}
       className={cn(
-        'pointer-events-auto fixed right-4 bottom-4 z-[80] w-[min(calc(100vw-2rem),22rem)]',
-        'animate-[auth-fade-up_0.35s_ease-out]',
+        'pointer-events-auto fixed right-4 bottom-4 z-[2147483000] w-[min(calc(100vw-2rem),22rem)]',
         className,
       )}
     >
-      <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#1c1c1e]/95 text-white shadow-[0_18px_50px_rgba(0,0,0,0.45)] backdrop-blur-xl">
+      <div className="overflow-hidden rounded-2xl border border-white/15 bg-[#1c1c1e] text-white shadow-[0_18px_50px_rgba(0,0,0,0.55)] ring-1 ring-black/40">
         <div className="flex items-start gap-3 px-4 pt-3.5 pb-2">
           <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-white/10">
             {icon}
@@ -86,7 +91,8 @@ export function IncomingDeskAlert({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -101,13 +107,13 @@ export function playDeskAlertTone(frequency = 880): void {
     const gain = ctx.createGain()
     oscillator.type = 'sine'
     oscillator.frequency.value = frequency
-    gain.gain.value = 0.04
+    gain.gain.value = 0.05
     oscillator.connect(gain)
     gain.connect(ctx.destination)
     oscillator.start()
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35)
-    oscillator.stop(ctx.currentTime + 0.35)
-    window.setTimeout(() => void ctx.close(), 500)
+    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4)
+    oscillator.stop(ctx.currentTime + 0.4)
+    window.setTimeout(() => void ctx.close(), 600)
   } catch {
     // Audio may be blocked until a gesture — toast still shows.
   }
@@ -118,7 +124,7 @@ export function flashDocumentTitle(label: string): void {
   document.title = label
   window.setTimeout(() => {
     document.title = original
-  }, 5000)
+  }, 6000)
 }
 
 export function showBrowserNotification(title: string, body: string, tag?: string): void {
@@ -135,11 +141,11 @@ export function showBrowserNotification(title: string, body: string, tag?: strin
       body,
       tag,
       icon: '/favicon.png',
-      badge: '/favicon.png',
+      requireInteraction: false,
     })
-    window.setTimeout(() => notification.close(), 8000)
+    window.setTimeout(() => notification.close(), 10_000)
   } catch {
-    // Ignore Notification API failures (unsupported options, etc.).
+    // Ignore Notification API failures.
   }
 }
 

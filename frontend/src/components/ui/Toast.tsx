@@ -30,7 +30,7 @@ export function ToastViewport({ toasts, onDismiss }: ToastViewportProps) {
   return (
     <div
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-4 top-4 z-[60] flex max-w-sm flex-col gap-3 sm:inset-x-auto sm:right-4"
+      className="pointer-events-none fixed inset-x-4 top-4 z-[2147483000] flex max-w-sm flex-col gap-3 sm:inset-x-auto sm:right-4"
     >
       {toasts.map((toast) => {
         const Icon = TONE_ICONS[toast.tone]

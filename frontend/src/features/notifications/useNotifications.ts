@@ -13,7 +13,7 @@ export function useNotificationFeed(
   options: { refetchIntervalMs?: number; ignoreLivePause?: boolean; desk?: NotificationDesk } = {},
 ) {
   const paused = useLiveRefreshPaused()
-  const refetchIntervalMs = options.refetchIntervalMs ?? 45_000
+  const refetchIntervalMs = options.refetchIntervalMs ?? 15_000
   const livePaused = options.ignoreLivePause ? false : paused
   const desk = options.desk
 
@@ -22,8 +22,9 @@ export function useNotificationFeed(
     queryFn: () => notificationService.feed(desk),
     enabled,
     refetchInterval: livePaused ? false : refetchIntervalMs,
-    refetchIntervalInBackground: false,
-    refetchOnWindowFocus: !livePaused,
+    refetchIntervalInBackground: true,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   })
 }
 
