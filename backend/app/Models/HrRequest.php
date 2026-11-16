@@ -143,6 +143,15 @@ class HrRequest extends Model
         return $query->where('requester_id', $userId);
     }
 
+    /** Open = not closed/rejected (includes resolved awaiting employee confirmation). */
+    public function scopeOpen(Builder $query): Builder
+    {
+        return $query->whereHas(
+            'status',
+            fn (Builder $status) => $status->where('is_terminal', false),
+        );
+    }
+
     public function scopePending(Builder $query): Builder
     {
         return $query->whereHas('status', fn (Builder $status) => $status->whereIn('slug', [

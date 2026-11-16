@@ -95,6 +95,12 @@ class User extends Authenticatable
         return $this->hasMany(Ticket::class, 'assigned_to');
     }
 
+    /** HR requests currently owned by this user as the primary assignee. */
+    public function assignedHrRequests(): HasMany
+    {
+        return $this->hasMany(HrRequest::class, 'assigned_to');
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(TicketComment::class, 'author_id');
@@ -138,6 +144,69 @@ class User extends Authenticatable
     public function isHrStaff(): bool
     {
         return in_array($this->resolveRole()?->slug, RoleSlug::hrStaffSlugs(), true);
+    }
+
+    /**
+     * HR Officer / Manager accounts that appear in the assign picker.
+     * Admins stay out of the list; only the configured desk names are shown.
+     */
+    public function isAssignableHrAgent(): bool
+    {
+        if (! $this->canAccessSystem()) {
+            return false;
+        }
+
+        if (! $this->hasRole(RoleSlug::HrOfficer, RoleSlug::HrManager)) {
+            return false;
+        }
+
+        $keywords = config('hr.assignable_name_keywords', []);
+        if (! is_array($keywords) || $keywords === []) {
+            return true;
+        }
+
+        $name = mb_strtolower($this->full_name);
+
+        foreach ($keywords as $keyword) {
+            if (is_string($keyword) && $keyword !== '' && str_contains($name, mb_strtolower($keyword))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeAssignableHrAgents(Builder $query): Builder
+    {
+        $keywords = config('hr.assignable_name_keywords', []);
+
+        $query
+            ->active()
+            ->whereHas(
+                'role',
+                fn (Builder $role) => $role->whereIn('slug', [
+                    RoleSlug::HrOfficer->value,
+                    RoleSlug::HrManager->value,
+                ]),
+            );
+
+        if (is_array($keywords) && $keywords !== []) {
+            $query->where(function (Builder $inner) use ($keywords): void {
+                foreach ($keywords as $keyword) {
+                    if (! is_string($keyword) || $keyword === '') {
+                        continue;
+                    }
+
+                    $inner->orWhere('full_name', 'like', '%'.$keyword.'%');
+                }
+            });
+        }
+
+        return $query;
     }
 
     /**

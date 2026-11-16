@@ -63,7 +63,9 @@ function buildColumns(staff: boolean, onOpen: (request: HrRequest) => void): Dat
   columns.push({
     id: 'status',
     header: 'Status',
-    cell: (request) => <HrStatusBadge status={request.status} />,
+    cell: (request) => (
+      <HrStatusBadge status={request.status} awaitingVerification={request.awaiting_verification} />
+    ),
   })
 
   if (staff) {
@@ -142,7 +144,7 @@ export function HrRequestTable({
         >
           <div className="flex items-start justify-between gap-3">
             <span className="font-mono text-xs font-medium text-primary-700">{request.reference}</span>
-            <HrStatusBadge status={request.status} />
+            <HrStatusBadge status={request.status} awaitingVerification={request.awaiting_verification} />
           </div>
           <p className="mt-2 text-sm font-medium text-surface-900">{request.request_type?.name ?? '\u2014'}</p>
           <p className="text-xs text-surface-500">{request.category?.name ?? ''}</p>

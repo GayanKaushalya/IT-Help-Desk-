@@ -170,7 +170,10 @@ export function HrAdminRequestsPage({
                   placeholder="All assignees"
                   options={[
                     { value: 'unassigned', label: 'Unassigned' },
-                    ...(agents?.map((agent) => ({ value: String(agent.id), label: agent.full_name })) ?? []),
+                    ...(agents?.map((agent) => ({
+                      value: String(agent.id),
+                      label: agent.role ? `${agent.full_name} · ${agent.role}` : agent.full_name,
+                    })) ?? []),
                   ]}
                 />
               )}

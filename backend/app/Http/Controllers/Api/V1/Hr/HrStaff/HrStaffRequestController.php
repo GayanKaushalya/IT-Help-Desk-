@@ -15,7 +15,6 @@ use App\Http\Requests\Api\V1\Hr\Staff\UpdateHrRequestStatusRequest;
 use App\Http\Resources\V1\Hr\HrCommentResource;
 use App\Http\Resources\V1\Hr\HrReferralResource;
 use App\Http\Resources\V1\Hr\HrStaffRequestResource;
-use App\Http\Resources\V1\Hr\HrUserResource;
 use App\Models\HrDepartmentReferral;
 use App\Models\HrRequest;
 use App\Models\HrRequestStatus;
@@ -50,7 +49,7 @@ class HrStaffRequestController extends Controller
     }
 
     /**
-     * HR staff who can be assigned requests.
+     * HR desk agents who can be assigned requests (IT-style workload cards).
      */
     public function agents(Request $request): JsonResponse
     {
@@ -58,9 +57,26 @@ class HrStaffRequestController extends Controller
             throw new AuthorizationException;
         }
 
-        $agents = User::query()->hrStaff()->active()->with('role')->orderBy('full_name')->get();
+        $agents = User::query()
+            ->assignableHrAgents()
+            ->with('role')
+            ->withCount([
+                'assignedHrRequests as total_assigned',
+                'assignedHrRequests as open_requests' => fn ($query) => $query->open(),
+            ])
+            ->orderBy('full_name')
+            ->get()
+            ->map(fn (User $user) => [
+                'id' => (int) $user->id,
+                'full_name' => $user->full_name,
+                'username' => $user->username,
+                'role' => $user->role?->name,
+                'is_hr_staff' => true,
+                'open_requests' => (int) $user->open_requests,
+                'total_assigned' => (int) $user->total_assigned,
+            ]);
 
-        return ApiResponse::success(HrUserResource::collection($agents)->resolve());
+        return ApiResponse::success($agents);
     }
 
     public function show(Request $request, string $hrRequest): JsonResponse

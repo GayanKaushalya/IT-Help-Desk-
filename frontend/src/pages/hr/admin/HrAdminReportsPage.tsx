@@ -237,7 +237,10 @@ export function HrAdminReportsPage() {
                 value={filters.assigned_to ?? ''}
                 onChange={(value) => updateFilter('assigned_to', value)}
                 placeholder="All HR staff"
-                options={agents?.map((agent) => ({ value: String(agent.id), label: agent.full_name })) ?? []}
+                options={agents?.map((agent) => ({
+                  value: String(agent.id),
+                  label: agent.role ? `${agent.full_name} · ${agent.role}` : agent.full_name,
+                })) ?? []}
               />
             )}
           </FilterField>

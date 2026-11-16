@@ -121,8 +121,7 @@ class HrRequestService
     public function assignToAllHrStaff(HrRequest $request, User $actor): HrRequest
     {
         $staff = User::query()
-            ->hrStaff()
-            ->active()
+            ->assignableHrAgents()
             ->with('role.permissions')
             ->orderBy('id')
             ->get();
@@ -138,11 +137,7 @@ class HrRequestService
         }
 
         $primary = $staff->first(
-            fn (User $member): bool => $member->hasRole(
-                RoleSlug::HrManager,
-                RoleSlug::Administrator,
-                RoleSlug::SuperAdmin,
-            ),
+            fn (User $member): bool => $member->hasRole(RoleSlug::HrManager),
         ) ?? $staff->first();
 
         return DB::transaction(function () use ($request, $actor, $staff, $primary) {
@@ -239,7 +234,7 @@ class HrRequestService
         $request->loadMissing('status');
         $this->assertOpen($request, 'assigned_to');
 
-        if (! $assignee->isHrStaff() || ! $assignee->canAccessSystem()) {
+        if (! $assignee->isAssignableHrAgent()) {
             throw ValidationException::withMessages([
                 'assigned_to' => ['The selected user cannot be assigned HR requests.'],
             ]);

@@ -496,6 +496,21 @@ export interface HrUserSummary {
   id: number
   full_name: string
   is_hr_staff: boolean
+  username?: string
+  role?: string | null
+  open_requests?: number
+  total_assigned?: number
+}
+
+/** Assignable HR desk agents with workload — mirrors IT StaffWorkload. */
+export interface HrStaffWorkload {
+  id: number
+  full_name: string
+  username?: string
+  role?: string | null
+  is_hr_staff?: boolean
+  open_requests: number
+  total_assigned: number
 }
 
 export interface HrAttachment {

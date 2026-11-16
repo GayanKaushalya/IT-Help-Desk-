@@ -87,12 +87,16 @@ function useInvalidateHrStaffRequest(requestId: string) {
 }
 
 export function useAssignHrRequest(requestId: string) {
+  const queryClient = useQueryClient()
   const invalidate = useInvalidateHrStaffRequest(requestId)
 
   return useMutation({
     mutationFn: ({ assignedTo, note }: { assignedTo: number; note?: string }) =>
       hrService.staff.assign(requestId, assignedTo, note),
-    onSuccess: invalidate,
+    onSuccess: () => {
+      invalidate()
+      void queryClient.invalidateQueries({ queryKey: hrStaffKeys.agents })
+    },
   })
 }
 

@@ -73,7 +73,7 @@ export function HrRequestDetailPage() {
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <HrRequestFlags request={request} />
-            <HrStatusBadge status={request.status} />
+            <HrStatusBadge status={request.status} awaitingVerification={request.awaiting_verification} />
           </div>
         }
       />

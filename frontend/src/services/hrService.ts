@@ -13,6 +13,7 @@ import type {
   HrReportOverview,
   HrRequest,
   HrSlaCategory,
+  HrStaffWorkload,
   HrUserSummary,
 } from '@/types/models'
 
@@ -131,7 +132,7 @@ export const hrService = {
   staff: {
     dashboard: (): Promise<HrDashboardOverview> => apiClient.get<HrDashboardOverview>('/hr/staff/dashboard'),
 
-    agents: (): Promise<HrUserSummary[]> => apiClient.get<HrUserSummary[]>('/hr/staff/agents'),
+    agents: (): Promise<HrStaffWorkload[]> => apiClient.get<HrStaffWorkload[]>('/hr/staff/agents'),
 
     reports: (params: HrReportParams = {}): Promise<HrReportOverview> =>
       apiClient.get<HrReportOverview>('/hr/staff/reports', { params: compactParams(params) }),
