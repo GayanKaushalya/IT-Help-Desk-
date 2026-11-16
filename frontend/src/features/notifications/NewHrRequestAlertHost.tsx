@@ -3,53 +3,27 @@ import { useEffect, useRef, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 
-import { Button } from '@/components/ui/Button'
-import { Modal } from '@/components/ui/Modal'
+import {
+  IncomingDeskAlert,
+  ensureNotificationPermission,
+  flashDocumentTitle,
+  playDeskAlertTone,
+  showBrowserNotification,
+} from '@/features/notifications/IncomingDeskAlert'
 import { useMarkNotificationRead, useNotificationFeed } from '@/features/notifications/useNotifications'
 import { paths } from '@/routes/paths'
 import type { AppNotification } from '@/types/models'
 
 const NEW_HR_REQUEST_TYPES = new Set(['hr.request.new'])
 
-function playAlertTone(): void {
-  try {
-    const AudioCtx =
-      window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
-    if (!AudioCtx) return
-
-    const ctx = new AudioCtx()
-    const oscillator = ctx.createOscillator()
-    const gain = ctx.createGain()
-    oscillator.type = 'sine'
-    oscillator.frequency.value = 740
-    gain.gain.value = 0.04
-    oscillator.connect(gain)
-    gain.connect(ctx.destination)
-    oscillator.start()
-    gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35)
-    oscillator.stop(ctx.currentTime + 0.35)
-    window.setTimeout(() => void ctx.close(), 500)
-  } catch {
-    // Browsers may block audio until a user gesture - the popup still shows.
-  }
-}
-
-function flashDocumentTitle(reference: string): void {
-  const original = document.title
-  document.title = `New HR request ${reference}`
-  window.setTimeout(() => {
-    document.title = original
-  }, 5000)
-}
-
 /**
  * While the HR admin shell is open, poll for new-request notifications and
- * open a screen popup as soon as one arrives. Mirrors NewTicketAlertHost.
+ * show a Windows-style toast as soon as one arrives.
  */
 export function NewHrRequestAlertHost() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const feed = useNotificationFeed(true, { refetchIntervalMs: 10_000, ignoreLivePause: true, desk: 'hr' })
+  const feed = useNotificationFeed(true, { refetchIntervalMs: 8_000, ignoreLivePause: true, desk: 'hr' })
   const markRead = useMarkNotificationRead('hr')
 
   const seenIds = useRef<Set<number> | null>(null)
@@ -57,11 +31,14 @@ export function NewHrRequestAlertHost() {
   const active = queue[0] ?? null
 
   useEffect(() => {
+    ensureNotificationPermission()
+  }, [])
+
+  useEffect(() => {
     const items = feed.data?.notifications
     if (!items) return
 
     if (seenIds.current === null) {
-      // First successful load: baseline only - do not popup historical unread.
       seenIds.current = new Set(items.map((item) => item.id))
       return
     }
@@ -87,8 +64,10 @@ export function NewHrRequestAlertHost() {
   useEffect(() => {
     if (!active) return
 
-    playAlertTone()
-    flashDocumentTitle(active.data?.reference ?? '')
+    const reference = active.data?.reference ?? 'New HR request'
+    playDeskAlertTone(740)
+    flashDocumentTitle(`New HR request ${reference}`)
+    showBrowserNotification('New HR request', `${reference} — ${active.body ?? active.title}`, `hr-${active.id}`)
   }, [active?.id])
 
   function dismissActive(markAsRead: boolean): void {
@@ -114,41 +93,29 @@ export function NewHrRequestAlertHost() {
   }
 
   return (
-    <Modal
+    <IncomingDeskAlert
       isOpen={Boolean(active)}
-      onClose={() => dismissActive(true)}
-      title="New HR request received"
-      description="A new HR request just arrived."
-      size="md"
-      footer={
-        <>
-          <Button variant="outline" onClick={() => dismissActive(true)}>
-            Dismiss
-          </Button>
-          <Button onClick={openRequest} disabled={!active?.data?.hr_request_id}>
-            Open request
-          </Button>
-        </>
-      }
-    >
-      {active && (
-        <div className="flex gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-primary-100 text-primary-700">
-            <UserPlus className="size-5" />
-          </span>
-          <div className="min-w-0 space-y-2">
-            <p className="font-mono text-sm font-semibold text-primary-700">
+      title="New HR request"
+      subtitle="Indra Help Desk"
+      icon={<UserPlus className="size-4 text-[#5ec8ff]" />}
+      body={
+        active ? (
+          <>
+            <p className="font-mono text-xs font-semibold tracking-wide text-[#5ec8ff]">
               {active.data?.reference ?? 'New HR request'}
             </p>
-            <p className="text-sm leading-6 text-surface-800">{active.body ?? active.title}</p>
-            {queue.length > 1 && (
-              <p className="text-xs text-surface-500">
-                {queue.length - 1} more new request{queue.length > 2 ? 's' : ''} waiting
-              </p>
-            )}
-          </div>
-        </div>
-      )}
-    </Modal>
+            <p className="mt-1">{active.body ?? active.title}</p>
+          </>
+        ) : null
+      }
+      meta={
+        queue.length > 1
+          ? `${queue.length - 1} more new request${queue.length > 2 ? 's' : ''} waiting`
+          : undefined
+      }
+      onDismiss={() => dismissActive(true)}
+      onOpen={openRequest}
+      openLabel="Open request"
+    />
   )
 }

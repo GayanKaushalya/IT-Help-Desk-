@@ -40,6 +40,10 @@ class StoreHrRequestRequest extends ApiFormRequest
                     ->where('hr_category_id', (int) $this->input('category_id'))),
             ],
             'description' => ['required', 'string', 'min:10', 'max:4000'],
+            'employee_id' => ['nullable', 'string', 'min:1', 'max:40'],
+            'employee_name' => ['nullable', 'string', 'min:2', 'max:150'],
+            'department_name' => ['nullable', 'string', 'max:120'],
+            'designation' => ['nullable', 'string', 'max:100'],
             'attachments' => ['nullable', 'array', 'max:'.$maxFiles],
             'attachments.*' => ['file', 'max:'.$maxKilobytes, 'mimes:'.$extensions, 'mimetypes:'.$mimes],
         ];
@@ -67,16 +71,33 @@ class StoreHrRequestRequest extends ApiFormRequest
 
     protected function prepareForValidation(): void
     {
-        if (is_string($this->input('description'))) {
-            $this->merge(['description' => trim($this->input('description'))]);
+        $merge = [];
+
+        foreach (['description', 'employee_id', 'employee_name', 'department_name', 'designation'] as $field) {
+            if (is_string($this->input($field))) {
+                $value = trim($this->input($field));
+                $merge[$field] = $value === '' ? null : $value;
+            }
+        }
+
+        if ($merge !== []) {
+            $this->merge($merge);
         }
     }
 
     /**
-     * Only the fields an employee may set; requester, status, confidentiality,
+     * Fields an employee may set; requester, status, confidentiality,
      * reference and SLA are assigned server-side.
      *
-     * @return array{category_id: int, request_type_id: int, description: string}
+     * @return array{
+     *     category_id: int,
+     *     request_type_id: int,
+     *     description: string,
+     *     employee_id: ?string,
+     *     employee_name: ?string,
+     *     department_name: ?string,
+     *     designation: ?string
+     * }
      */
     public function requestData(): array
     {
@@ -86,6 +107,10 @@ class StoreHrRequestRequest extends ApiFormRequest
             'category_id' => (int) $validated['category_id'],
             'request_type_id' => (int) $validated['request_type_id'],
             'description' => (string) $validated['description'],
+            'employee_id' => isset($validated['employee_id']) ? (string) $validated['employee_id'] : null,
+            'employee_name' => isset($validated['employee_name']) ? (string) $validated['employee_name'] : null,
+            'department_name' => isset($validated['department_name']) ? (string) $validated['department_name'] : null,
+            'designation' => isset($validated['designation']) ? (string) $validated['designation'] : null,
         ];
     }
 

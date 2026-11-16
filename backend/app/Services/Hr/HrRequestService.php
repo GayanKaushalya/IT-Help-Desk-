@@ -53,7 +53,15 @@ class HrRequestService
     ) {}
 
     /**
-     * @param  array{category_id: int, request_type_id: int, description: string}  $data
+     * @param  array{
+     *     category_id: int,
+     *     request_type_id: int,
+     *     description: string,
+     *     employee_id?: ?string,
+     *     employee_name?: ?string,
+     *     department_name?: ?string,
+     *     designation?: ?string
+     * }  $data
      * @param  array<int, UploadedFile>  $files
      */
     public function create(User $user, array $data, array $files = []): HrRequest
@@ -437,7 +445,9 @@ class HrRequestService
                 ]);
             }
 
-            $request->assertIndividualAssigneeForClose();
+            // Employee confirmation must never fail because the desk was still
+            // team-assigned — collapse to the primary assignee, then close.
+            $this->collapseToPrimaryAssignee($request);
 
             $request->forceFill([
                 'closed_by' => $actor->id,
@@ -588,13 +598,40 @@ class HrRequestService
             return $request;
         }
 
-        if (! $actor->isHrStaff()) {
+        if ($actor->isAssignableHrAgent()) {
+            return $this->assign($request, $actor, $actor);
+        }
+
+        throw ValidationException::withMessages([
+            'assigned_to' => ['Assign this request to Ruwanthi, Manesh, or Isuru before resolving it.'],
+        ]);
+    }
+
+    /**
+     * Keep the primary assignee and release any leftover team assignments so
+     * employee confirmation / close can proceed.
+     */
+    private function collapseToPrimaryAssignee(HrRequest $request): void
+    {
+        $request->loadMissing('assignments');
+
+        if ($request->hasIndividualAssignee()) {
+            return;
+        }
+
+        if ($request->assigned_to === null) {
             throw ValidationException::withMessages([
-                'status_id' => ['Assign the request before changing its status.'],
+                'assigned_to' => ['This request has no assignee, so it cannot be closed yet.'],
             ]);
         }
 
-        return $this->assign($request, $actor, $actor);
+        $request->assignments()
+            ->current()
+            ->where('assigned_to', '!=', $request->assigned_to)
+            ->update(['released_at' => now()]);
+
+        $request->unsetRelation('assignments');
+        $request->load('assignments');
     }
 
     public function createReferral(
@@ -716,7 +753,15 @@ class HrRequestService
     }
 
     /**
-     * @param  array{category_id: int, request_type_id: int, description: string}  $data
+     * @param  array{
+     *     category_id: int,
+     *     request_type_id: int,
+     *     description: string,
+     *     employee_id?: ?string,
+     *     employee_name?: ?string,
+     *     department_name?: ?string,
+     *     designation?: ?string
+     * }  $data
      */
     private function insertWithUniqueReference(
         User $user,
@@ -735,10 +780,10 @@ class HrRequestService
                 return HrRequest::query()->create([
                     'reference' => $this->references->next(),
                     'requester_id' => $user->id,
-                    'employee_id' => (string) (($attributes['employee_id'] ?? null) ?: $user->username),
-                    'employee_name' => (string) $user->full_name,
-                    'department_name' => $user->department?->name,
-                    'designation' => $attributes['job_title'] ?? null,
+                    'employee_id' => (string) (($data['employee_id'] ?? null) ?: (($attributes['employee_id'] ?? null) ?: $user->username)),
+                    'employee_name' => (string) (($data['employee_name'] ?? null) ?: $user->full_name),
+                    'department_name' => ($data['department_name'] ?? null) ?: $user->department?->name,
+                    'designation' => ($data['designation'] ?? null) ?: ($attributes['job_title'] ?? null),
                     'branch_id' => $attributes['branch_id'] ?? null,
                     'department_id' => $attributes['department_id'] ?? null,
                     'hr_category_id' => $category->id,

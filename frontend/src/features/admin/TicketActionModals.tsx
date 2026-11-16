@@ -16,8 +16,6 @@ import { useToast } from '@/hooks/useToast'
 import { ApiError } from '@/types/api'
 import type { Ticket } from '@/types/models'
 
-const RESOLUTION_MAX = 2000
-
 export function ChangeStatusModal({
   ticket,
   isOpen,
@@ -121,14 +119,10 @@ export function ChangeStatusModal({
             </label>
             <Textarea
               rows={4}
-              maxLength={RESOLUTION_MAX}
               value={summary}
               onChange={(event) => setSummary(event.target.value)}
               placeholder="What was done to resolve this request?"
             />
-            <p className="mt-2 text-xs text-surface-500">
-              {summary.trim().length} / {RESOLUTION_MAX}
-            </p>
           </div>
         )}
       </Modal>
@@ -287,14 +281,10 @@ export function ResolveTicketModal({
         </label>
         <Textarea
           rows={5}
-          maxLength={RESOLUTION_MAX}
           value={summary}
           onChange={(event) => setSummary(event.target.value)}
           placeholder="What was done to resolve this request?"
         />
-        <p className="mt-2 text-xs text-surface-500">
-          {summary.trim().length} / {RESOLUTION_MAX}
-        </p>
       </Modal>
 
       <ConfirmDialog

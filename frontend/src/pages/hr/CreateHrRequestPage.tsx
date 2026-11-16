@@ -1,5 +1,5 @@
 import { ArrowLeft, CheckCircle2, Lock, Send } from 'lucide-react'
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import { PageHeader } from '@/components/common/PageHeader'
@@ -37,6 +37,10 @@ export function CreateHrRequestPage() {
   const [categoryId, setCategoryId] = useState('')
   const [typeId, setTypeId] = useState('')
   const [description, setDescription] = useState('')
+  const [employeeId, setEmployeeId] = useState(user?.employee_id ?? '')
+  const [employeeName, setEmployeeName] = useState(user?.full_name ?? '')
+  const [departmentName, setDepartmentName] = useState(user?.department?.name ?? '')
+  const [designation, setDesignation] = useState(user?.job_title ?? '')
   const [files, setFiles] = useState<SelectedFile[]>([])
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
@@ -45,6 +49,14 @@ export function CreateHrRequestPage() {
   const [created, setCreated] = useState<HrRequest | null>(null)
 
   usePauseLiveRefresh(description.trim().length > 0 || files.length > 0 || isSubmitting)
+
+  useEffect(() => {
+    if (!user) return
+    setEmployeeId((current) => current || user.employee_id || '')
+    setEmployeeName((current) => current || user.full_name || '')
+    setDepartmentName((current) => current || user.department?.name || '')
+    setDesignation((current) => current || user.job_title || '')
+  }, [user])
 
   const selectedCategory = useMemo(
     () => lookups?.categories.find((category) => String(category.id) === categoryId),
@@ -72,6 +84,8 @@ export function CreateHrRequestPage() {
     const errors: Record<string, string> = {}
     const text = description.trim()
 
+    if (!employeeId.trim()) errors.employee_id = 'Enter your employee ID.'
+    if (!employeeName.trim()) errors.employee_name = 'Enter your name.'
     if (!categoryId) errors.category_id = 'Select a category.'
     if (!typeId) errors.request_type_id = 'Select a request type.'
 
@@ -99,6 +113,10 @@ export function CreateHrRequestPage() {
     body.append('category_id', categoryId)
     body.append('request_type_id', typeId)
     body.append('description', description.trim())
+    body.append('employee_id', employeeId.trim())
+    body.append('employee_name', employeeName.trim())
+    if (departmentName.trim()) body.append('department_name', departmentName.trim())
+    if (designation.trim()) body.append('designation', designation.trim())
     files.forEach((item) => body.append('attachments[]', item.file))
 
     setIsSubmitting(true)
@@ -132,6 +150,10 @@ export function CreateHrRequestPage() {
     setCategoryId('')
     setTypeId('')
     setDescription('')
+    setEmployeeId(user?.employee_id ?? '')
+    setEmployeeName(user?.full_name ?? '')
+    setDepartmentName(user?.department?.name ?? '')
+    setDesignation(user?.job_title ?? '')
     setFiles([])
     setFieldErrors({})
     setFormError(null)
@@ -213,15 +235,6 @@ export function CreateHrRequestPage() {
     day: 'numeric',
   })
 
-  const readOnlyFields: { label: string; value: string }[] = [
-    { label: 'Employee ID', value: user?.employee_id ?? '' },
-    { label: 'Employee Name', value: user?.full_name ?? '' },
-    { label: 'Department', value: user?.department?.name ?? '' },
-    { label: 'Designation', value: user?.job_title ?? '' },
-    { label: 'Branch / Location', value: user?.branch?.name ?? '' },
-    { label: 'Submission Date', value: submissionDate },
-  ]
-
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <PageHeader
@@ -241,15 +254,74 @@ export function CreateHrRequestPage() {
       <Card>
         <CardHeader
           title="Your details"
-          description="Taken from your profile. Contact HR if anything here is out of date."
+          description="Pre-filled from your profile — edit anything that is missing or out of date before you submit."
         />
         <CardContent>
           <div className="grid gap-5 sm:grid-cols-2">
-            {readOnlyFields.map((field) => (
-              <FormField key={field.label} label={field.label}>
-                {({ id }) => <Input id={id} value={field.value || '\u2014'} readOnly disabled />}
-              </FormField>
-            ))}
+            <FormField label="Employee ID" required error={fieldErrors.employee_id}>
+              {({ id, hasError }) => (
+                <Input
+                  id={id}
+                  hasError={hasError}
+                  value={employeeId}
+                  onChange={(event) => {
+                    setEmployeeId(event.target.value)
+                    clearError('employee_id')
+                  }}
+                  disabled={isSubmitting}
+                />
+              )}
+            </FormField>
+            <FormField label="Employee Name" required error={fieldErrors.employee_name}>
+              {({ id, hasError }) => (
+                <Input
+                  id={id}
+                  hasError={hasError}
+                  value={employeeName}
+                  onChange={(event) => {
+                    setEmployeeName(event.target.value)
+                    clearError('employee_name')
+                  }}
+                  disabled={isSubmitting}
+                />
+              )}
+            </FormField>
+            <FormField label="Department" error={fieldErrors.department_name}>
+              {({ id, hasError }) => (
+                <Input
+                  id={id}
+                  hasError={hasError}
+                  value={departmentName}
+                  onChange={(event) => {
+                    setDepartmentName(event.target.value)
+                    clearError('department_name')
+                  }}
+                  placeholder="e.g. Human Resources"
+                  disabled={isSubmitting}
+                />
+              )}
+            </FormField>
+            <FormField label="Designation" error={fieldErrors.designation}>
+              {({ id, hasError }) => (
+                <Input
+                  id={id}
+                  hasError={hasError}
+                  value={designation}
+                  onChange={(event) => {
+                    setDesignation(event.target.value)
+                    clearError('designation')
+                  }}
+                  placeholder="e.g. Accounts Clerk"
+                  disabled={isSubmitting}
+                />
+              )}
+            </FormField>
+            <FormField label="Branch / Location">
+              {({ id }) => <Input id={id} value={user?.branch?.name ?? '\u2014'} readOnly disabled />}
+            </FormField>
+            <FormField label="Submission Date">
+              {({ id }) => <Input id={id} value={submissionDate} readOnly disabled />}
+            </FormField>
           </div>
         </CardContent>
       </Card>

@@ -21,7 +21,7 @@ import { HrStaffConversation } from '@/features/hr/HrComments'
 import { hrAssigneeLabel } from '@/features/hr/hrAssigneeLabel'
 import { HrRequestFlags, HrStatusBadge } from '@/features/hr/HrStatusBadge'
 import { HrTimeline } from '@/features/hr/HrTimeline'
-import { useAssignHrRequest, useCloseHrRequestAsVerified, useHrStaffRequest } from '@/features/hr/useHrStaff'
+import { useAssignHrRequest, useHrStaffRequest } from '@/features/hr/useHrStaff'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
 import { paths } from '@/routes/paths'
@@ -41,7 +41,6 @@ export function HrAdminRequestWorkspacePage() {
   const { user, hasPermission } = useAuth()
   const { data: request, isPending, isError, error, refetch, isRefetching } = useHrStaffRequest(id)
   const takeRequest = useAssignHrRequest(id ?? '')
-  const closeAsVerified = useCloseHrRequestAsVerified(id ?? '')
 
   const [assignOpen, setAssignOpen] = useState(false)
   const [statusOpen, setStatusOpen] = useState(false)
@@ -92,10 +91,6 @@ export function HrAdminRequestWorkspacePage() {
   const canAssign = hasPermission('hr.requests.assign')
   const canStatus = (hasPermission('hr.requests.update_status') || assignedToMe) && !finished && !resolved
   const canResolve = (hasPermission('hr.requests.resolve') || assignedToMe) && !finished && !resolved
-  const canCloseAsVerified =
-    (hasPermission('hr.requests.resolve') || assignedToMe) &&
-    !finished &&
-    (resolved || Boolean(request.resolution_summary))
   const canRefer = hasPermission('hr.requests.refer') && !finished && !resolved
   const canTake =
     !canAssign &&
@@ -176,31 +171,12 @@ export function HrAdminRequestWorkspacePage() {
             Resolve request
           </Button>
         )}
-        {canCloseAsVerified && (
-          <Button
-            variant="outline"
-            isLoading={closeAsVerified.isPending}
-            onClick={() => {
-              void closeAsVerified
-                .mutateAsync()
-                .then(() => toast.success('Request closed', `${request.reference} was closed as verified.`))
-                .catch((cause: unknown) => {
-                  toast.error(
-                    'Could not close request',
-                    cause instanceof ApiError ? cause.message : 'Assign a specific HR member first, then try again.',
-                  )
-                })
-            }}
-          >
-            Close as verified
-          </Button>
-        )}
       </div>
 
       {request.awaiting_verification && (
         <Card className="border-warning-200 bg-warning-50/70">
           <CardContent className="py-4 text-sm text-surface-700">
-            Waiting for the employee to confirm this resolution. You can close as verified if they cannot respond.
+            Waiting for the employee to confirm this resolution in their HR Help Desk.
           </CardContent>
         </Card>
       )}

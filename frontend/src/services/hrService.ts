@@ -14,7 +14,6 @@ import type {
   HrRequest,
   HrSlaCategory,
   HrStaffWorkload,
-  HrUserSummary,
 } from '@/types/models'
 
 export interface HrReportParams {

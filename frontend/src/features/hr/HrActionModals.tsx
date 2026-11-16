@@ -291,14 +291,10 @@ export function ResolveHrRequestModal({ request, isOpen, onClose }: ModalBasePro
           <Textarea
             id="hr-resolve-summary"
             rows={4}
-            maxLength={TEXT_MAX}
             value={summary}
             onChange={(event) => setSummary(event.target.value)}
-            placeholder="What was done to resolve this request? (at least 5 characters)"
+            placeholder="What was done to resolve this request?"
           />
-          <p className="mt-2 text-xs text-surface-500">
-            {summary.trim().length} / {TEXT_MAX}
-          </p>
         </div>
       </div>
     </Modal>
