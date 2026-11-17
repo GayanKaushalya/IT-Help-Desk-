@@ -64,7 +64,7 @@ export function HrTopbar({ onOpenNavigation, variant }: HrTopbarProps) {
         </span>
 
         <ThemeToggle />
-        <NotificationBell desk="hr" />
+        <NotificationBell desk="hr" audience={isAdmin ? 'staff' : 'employee'} />
 
         <div className="mx-1 hidden h-6 w-px bg-surface-200 sm:block" />
         <UserMenu profilePath={paths.hr.profile} />

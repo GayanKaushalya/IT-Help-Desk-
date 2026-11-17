@@ -78,12 +78,26 @@ return Application::configure(basePath: dirname(__DIR__))
                     code: 'VALIDATION_FAILED',
                 ),
 
-                $e instanceof AuthenticationException,
-                $e instanceof RouteNotFoundException => ApiResponse::error(
+                $e instanceof AuthenticationException => ApiResponse::error(
                     'Authentication is required to access this resource.',
                     Response::HTTP_UNAUTHORIZED,
                     code: 'UNAUTHENTICATED',
                 ),
+
+                // Guests hitting auth middleware may throw "Route [login] not defined"
+                // on API requests. Treat only that case as unauthenticated; other
+                // missing named routes must not force the SPA to sign the user out.
+                $e instanceof RouteNotFoundException => str_contains(strtolower($e->getMessage()), 'login')
+                    ? ApiResponse::error(
+                        'Authentication is required to access this resource.',
+                        Response::HTTP_UNAUTHORIZED,
+                        code: 'UNAUTHENTICATED',
+                    )
+                    : ApiResponse::error(
+                        'The requested resource was not found.',
+                        Response::HTTP_NOT_FOUND,
+                        code: 'NOT_FOUND',
+                    ),
 
                 $e instanceof AuthorizationException => ApiResponse::error(
                     'You are not authorized to perform this action.',

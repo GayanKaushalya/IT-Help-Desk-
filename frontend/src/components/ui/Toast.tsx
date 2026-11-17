@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Info, TicketPlus, X, XCircle } from 'lucide-react'
 import type { ComponentType } from 'react'
 
 import type { Toast, ToastTone } from '@/contexts/ToastContext'
@@ -18,6 +18,13 @@ const TONE_ICON_CLASSES: Record<ToastTone, string> = {
   info: 'text-info-600',
 }
 
+const TONE_PANEL: Record<ToastTone, string> = {
+  success: 'border-success-200 bg-panel',
+  error: 'border-danger-200 bg-panel',
+  warning: 'border-warning-200 bg-panel',
+  info: 'border-primary-200 bg-panel',
+}
+
 export interface ToastViewportProps {
   toasts: Toast[]
   onDismiss: (id: string) => void
@@ -33,22 +40,47 @@ export function ToastViewport({ toasts, onDismiss }: ToastViewportProps) {
       className="pointer-events-none fixed inset-x-4 top-4 z-[2147483000] flex max-w-sm flex-col gap-3 sm:inset-x-auto sm:right-4"
     >
       {toasts.map((toast) => {
-        const Icon = TONE_ICONS[toast.tone]
+        const isDeskAlert = Boolean(toast.actionLabel && toast.onAction)
+        const Icon = isDeskAlert ? TicketPlus : TONE_ICONS[toast.tone]
 
         return (
           <div
             key={toast.id}
             className={cn(
               'pointer-events-auto flex animate-slide-up items-start gap-3',
-              'rounded-lg border border-surface-200 bg-panel p-4 shadow-overlay',
+              'rounded-xl border p-4 shadow-overlay',
+              TONE_PANEL[toast.tone],
+              isDeskAlert && 'border-primary-300 bg-primary-50/90 shadow-card',
             )}
           >
-            <Icon className={cn('mt-0.5 size-5 shrink-0', TONE_ICON_CLASSES[toast.tone])} aria-hidden />
+            <span
+              className={cn(
+                'mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg',
+                isDeskAlert ? 'bg-primary-600 text-white' : 'bg-surface-100',
+              )}
+            >
+              <Icon
+                className={cn('size-4', isDeskAlert ? 'text-white' : TONE_ICON_CLASSES[toast.tone])}
+                aria-hidden
+              />
+            </span>
 
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold text-surface-900">{toast.title}</p>
               {toast.description && (
-                <p className="mt-0.5 text-sm text-surface-500">{toast.description}</p>
+                <p className="mt-0.5 text-sm leading-5 text-surface-600">{toast.description}</p>
+              )}
+              {toast.actionLabel && toast.onAction && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast.onAction?.()
+                    onDismiss(toast.id)
+                  }}
+                  className="mt-3 inline-flex text-sm font-semibold text-primary-700 transition-colors hover:text-primary-800"
+                >
+                  {toast.actionLabel}
+                </button>
               )}
             </div>
 

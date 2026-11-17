@@ -7,6 +7,9 @@ export interface Toast {
   tone: ToastTone
   title: string
   description?: string
+  actionLabel?: string
+  onAction?: () => void
+  durationMs?: number
 }
 
 export interface ToastContextValue {

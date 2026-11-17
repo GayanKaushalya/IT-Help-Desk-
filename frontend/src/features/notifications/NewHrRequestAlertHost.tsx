@@ -1,14 +1,17 @@
 import { useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { useIncomingDeskAlerts } from '@/features/notifications/useIncomingDeskAlerts'
 import { useMarkNotificationRead } from '@/features/notifications/useNotifications'
 import { useToast } from '@/hooks/useToast'
+import { paths } from '@/routes/paths'
 
 /**
  * Watches for newly arrived HR requests and raises the standard app toast.
  */
 export function NewHrRequestAlertHost() {
   const toast = useToast()
+  const navigate = useNavigate()
   const { active, dismiss } = useIncomingDeskAlerts('hr')
   const markRead = useMarkNotificationRead('hr')
   const announced = useRef<Set<number>>(new Set())
@@ -18,13 +21,23 @@ export function NewHrRequestAlertHost() {
     announced.current.add(active.id)
 
     const reference = active.data?.reference ?? 'New HR request'
-    toast.info('New HR request', active.body ?? reference)
+    const requestId = active.data?.hr_request_id
+
+    toast.info('New HR request', active.body ?? reference, {
+      actionLabel: requestId ? 'Open request' : undefined,
+      onAction: requestId
+        ? () => {
+            void navigate(paths.hr.admin.requestDetail(requestId))
+          }
+        : undefined,
+      durationMs: 10_000,
+    })
 
     if (active.id > 0 && active.is_read !== true) {
-      markRead.mutate(active.id)
+      markRead.mutate(active.id, { onError: () => undefined })
     }
     dismiss(active.id)
-  }, [active, dismiss, markRead, toast])
+  }, [active, dismiss, markRead, navigate, toast])
 
   return null
 }

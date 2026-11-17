@@ -5,24 +5,28 @@ import { useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/Button'
 import {
+  hrefForNotification,
+  parseNotificationData,
+  type NotificationAudience,
+} from '@/features/notifications/notificationLinks'
+import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotificationFeed,
 } from '@/features/notifications/useNotifications'
-import { useAuth } from '@/hooks/useAuth'
 import { paths } from '@/routes/paths'
 import type { NotificationDesk } from '@/services/notificationService'
 import type { AppNotification } from '@/types/models'
-import { DESK_ROLES, HR_DESK_ROLES } from '@/utils/roles'
 import { formatRelativeTime } from '@/utils/format'
 
 export interface NotificationBellProps {
   /** Only show notifications for this help desk. */
   desk: NotificationDesk
+  /** Staff bells open the admin workspace; employee bells open self-service pages. */
+  audience: NotificationAudience
 }
 
-export function NotificationBell({ desk }: NotificationBellProps) {
-  const { hasRole } = useAuth()
+export function NotificationBell({ desk, audience }: NotificationBellProps) {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
@@ -33,8 +37,6 @@ export function NotificationBell({ desk }: NotificationBellProps) {
 
   const unread = feed.data?.unread_count ?? 0
   const items = feed.data?.notifications ?? []
-  const isDesk = hasRole(...DESK_ROLES)
-  const isHrDesk = hasRole(...HR_DESK_ROLES)
   const label = desk === 'hr' ? 'HR notifications' : 'IT notifications'
 
   const emptyCopy = useMemo(
@@ -55,42 +57,47 @@ export function NotificationBell({ desk }: NotificationBellProps) {
     return () => document.removeEventListener('mousedown', handlePointer)
   }, [open])
 
-  function hrefFor(notification: AppNotification): string | null {
-    const hrRequestId = notification.data?.hr_request_id
-    if (notification.type.startsWith('hr.') && hrRequestId) {
-      return isHrDesk ? paths.hr.admin.requestDetail(hrRequestId) : paths.hr.detail(hrRequestId)
-    }
-
-    const ticketId = notification.data?.ticket_id
-    if (!ticketId) return null
-
-    return isDesk ? paths.admin.ticketDetail(ticketId) : paths.tickets.detail(ticketId)
-  }
-
   function openNotification(notification: AppNotification) {
-    if (!notification.is_read) {
-      markRead.mutate(notification.id)
+    const href = hrefForNotification(notification, desk, audience)
+    const data = parseNotificationData(notification)
+    setOpen(false)
+
+    // Navigate first so a mark-read failure cannot interrupt opening the ticket.
+    if (href) {
+      void navigate(href)
     }
 
-    const hrRequestId = notification.data?.hr_request_id
-    if (hrRequestId) {
+    if (notification.is_read !== true && notification.id > 0) {
+      markRead.mutate(notification.id, {
+        onError: () => {
+          // Keep the user on the ticket/request page even if mark-read fails.
+        },
+      })
+    }
+
+    if (data?.hr_request_id) {
       void queryClient.invalidateQueries({ queryKey: ['hr'] })
     }
 
-    const ticketId = notification.data?.ticket_id
-    if (ticketId) {
-      void queryClient.invalidateQueries({ queryKey: ['tickets', String(ticketId)] })
-      void queryClient.invalidateQueries({ queryKey: ['staff', 'tickets', String(ticketId)] })
+    if (data?.ticket_id) {
+      const ticketId = String(data.ticket_id)
+      void queryClient.invalidateQueries({ queryKey: ['tickets', ticketId] })
+      void queryClient.invalidateQueries({ queryKey: ['staff', 'tickets', ticketId] })
       void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
       void queryClient.invalidateQueries({ queryKey: ['tickets'] })
       void queryClient.invalidateQueries({ queryKey: ['staff', 'tickets'] })
       void queryClient.invalidateQueries({ queryKey: ['staff', 'dashboard'] })
     }
 
-    const href = hrefFor(notification)
-    setOpen(false)
-    if (href) {
-      void navigate(href)
+    if (!href) {
+      // Fall back to the desk queue when the payload has no target id.
+      void navigate(desk === 'hr'
+        ? audience === 'staff'
+          ? paths.hr.admin.requests
+          : paths.hr.requests
+        : audience === 'staff'
+          ? paths.admin.tickets
+          : paths.tickets.index)
     }
   }
 

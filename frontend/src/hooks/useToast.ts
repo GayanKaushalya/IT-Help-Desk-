@@ -1,6 +1,8 @@
 import { useContext, useMemo } from 'react'
 
-import { ToastContext } from '@/contexts/ToastContext'
+import { ToastContext, type Toast } from '@/contexts/ToastContext'
+
+type ToastOptions = Pick<Toast, 'actionLabel' | 'onAction' | 'durationMs'>
 
 /**
  * Raises application notifications.
@@ -20,14 +22,14 @@ export function useToast() {
   return useMemo(
     () => ({
       dismiss,
-      success: (title: string, description?: string) =>
-        notify({ tone: 'success', title, ...(description ? { description } : {}) }),
-      error: (title: string, description?: string) =>
-        notify({ tone: 'error', title, ...(description ? { description } : {}) }),
-      warning: (title: string, description?: string) =>
-        notify({ tone: 'warning', title, ...(description ? { description } : {}) }),
-      info: (title: string, description?: string) =>
-        notify({ tone: 'info', title, ...(description ? { description } : {}) }),
+      success: (title: string, description?: string, options?: ToastOptions) =>
+        notify({ tone: 'success', title, ...(description ? { description } : {}), ...options }),
+      error: (title: string, description?: string, options?: ToastOptions) =>
+        notify({ tone: 'error', title, ...(description ? { description } : {}), ...options }),
+      warning: (title: string, description?: string, options?: ToastOptions) =>
+        notify({ tone: 'warning', title, ...(description ? { description } : {}), ...options }),
+      info: (title: string, description?: string, options?: ToastOptions) =>
+        notify({ tone: 'info', title, ...(description ? { description } : {}), ...options }),
     }),
     [notify, dismiss],
   )

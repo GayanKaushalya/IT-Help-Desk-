@@ -56,7 +56,7 @@ export function AdminTopbar({ onOpenNavigation }: AdminTopbarProps) {
         </span>
 
         <ThemeToggle />
-        <NotificationBell desk="it" />
+        <NotificationBell desk="it" audience="staff" />
 
         <div className="mx-1 hidden h-6 w-px bg-surface-200 sm:block" />
         <UserMenu profilePath={paths.profile} />

@@ -23,9 +23,10 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const notify = useCallback(
     (toast: Omit<Toast, 'id'>) => {
       const id = nextToastId()
+      const duration = toast.durationMs ?? AUTO_DISMISS_MS
 
       setToasts((current) => [...current, { ...toast, id }])
-      window.setTimeout(() => dismiss(id), AUTO_DISMISS_MS)
+      window.setTimeout(() => dismiss(id), duration)
     },
     [dismiss],
   )

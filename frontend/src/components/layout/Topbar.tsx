@@ -52,7 +52,7 @@ export function Topbar({ onOpenNavigation }: TopbarProps) {
 
       <div className="ml-auto flex items-center gap-1 sm:gap-2">
         <ThemeToggle />
-        <NotificationBell desk="it" />
+        <NotificationBell desk="it" audience="employee" />
 
         <div className="mx-1 hidden h-6 w-px bg-surface-200 sm:block" />
 
