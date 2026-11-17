@@ -12,9 +12,9 @@ import { ApiError } from '@/types/api'
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Balance freshness vs API load (remote SQL Server). Mutations still invalidate.
-      staleTime: 20_000,
-      refetchOnWindowFocus: true,
+      // Prefer cached data longer so SQL Server round-trips do not freeze navigation.
+      staleTime: 45_000,
+      refetchOnWindowFocus: false,
       refetchOnReconnect: true,
       retry: (failureCount, error) => {
         if (error instanceof ApiError && (error.isUnauthenticated || error.isForbidden)) {

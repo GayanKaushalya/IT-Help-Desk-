@@ -1,6 +1,7 @@
 import { createContext } from 'react'
 
 export type ToastTone = 'success' | 'error' | 'warning' | 'info'
+export type ToastPlacement = 'top-right' | 'center'
 
 export interface Toast {
   id: string
@@ -10,6 +11,7 @@ export interface Toast {
   actionLabel?: string
   onAction?: () => void
   durationMs?: number
+  placement?: ToastPlacement
 }
 
 export interface ToastContextValue {

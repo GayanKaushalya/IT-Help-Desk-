@@ -31,7 +31,7 @@ export function NotificationBell({ desk, audience }: NotificationBellProps) {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
-  const feed = useNotificationFeed(true, { desk, refetchIntervalMs: 8_000, ignoreLivePause: true })
+  const feed = useNotificationFeed(true, { desk, refetchIntervalMs: 30_000, ignoreLivePause: true })
   const markRead = useMarkNotificationRead(desk)
   const markAll = useMarkAllNotificationsRead(desk)
 

@@ -24,13 +24,14 @@ export function NewTicketAlertHost() {
     const ticketId = active.data?.ticket_id
 
     toast.info('New IT ticket', active.body ?? reference, {
+      placement: 'center',
       actionLabel: ticketId ? 'Open ticket' : undefined,
       onAction: ticketId
         ? () => {
             void navigate(paths.admin.ticketDetail(ticketId))
           }
         : undefined,
-      durationMs: 10_000,
+      durationMs: 12_000,
     })
 
     if (active.id > 0 && active.is_read !== true) {

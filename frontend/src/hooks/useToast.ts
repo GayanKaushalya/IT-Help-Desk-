@@ -2,7 +2,7 @@ import { useContext, useMemo } from 'react'
 
 import { ToastContext, type Toast } from '@/contexts/ToastContext'
 
-type ToastOptions = Pick<Toast, 'actionLabel' | 'onAction' | 'durationMs'>
+type ToastOptions = Pick<Toast, 'actionLabel' | 'onAction' | 'durationMs' | 'placement'>
 
 /**
  * Raises application notifications.

@@ -24,13 +24,14 @@ export function NewHrRequestAlertHost() {
     const requestId = active.data?.hr_request_id
 
     toast.info('New HR request', active.body ?? reference, {
+      placement: 'center',
       actionLabel: requestId ? 'Open request' : undefined,
       onAction: requestId
         ? () => {
             void navigate(paths.hr.admin.requestDetail(requestId))
           }
         : undefined,
-      durationMs: 10_000,
+      durationMs: 12_000,
     })
 
     if (active.id > 0 && active.is_read !== true) {
