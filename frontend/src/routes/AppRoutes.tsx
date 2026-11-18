@@ -6,6 +6,8 @@ import { AdminLayout } from '@/layouts/AdminLayout'
 import { AppLayout } from '@/layouts/AppLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { DeskLayout } from '@/layouts/DeskLayout'
+import { AdministrationAdminLayout } from '@/layouts/AdministrationAdminLayout'
+import { AdministrationEmployeeLayout } from '@/layouts/AdministrationEmployeeLayout'
 import { HrAdminLayout } from '@/layouts/HrAdminLayout'
 import { HrEmployeeLayout } from '@/layouts/HrEmployeeLayout'
 import { LoginPage } from '@/pages/LoginPage'
@@ -13,7 +15,7 @@ import { RegisterPage } from '@/pages/RegisterPage'
 import { GuestRoute } from '@/routes/GuestRoute'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { paths } from '@/routes/paths'
-import { DESK_ROLES, HR_DESK_ROLES } from '@/utils/roles'
+import { ADM_DESK_ROLES, DESK_ROLES, HR_DESK_ROLES } from '@/utils/roles'
 
 const RootEntry = lazy(() => import('@/routes/RootEntry').then((module) => ({ default: module.RootEntry })))
 const DashboardPage = lazy(() => import('@/pages/DashboardPage').then((module) => ({ default: module.DashboardPage })))
@@ -102,6 +104,54 @@ const HrAdminSlaPage = lazy(() =>
 )
 const HrProfilePage = lazy(() =>
   import('@/pages/hr/HrProfilePage').then((module) => ({ default: module.HrProfilePage })),
+)
+const AdmHomePage = lazy(() =>
+  import('@/pages/administration/AdmHomePage').then((module) => ({ default: module.AdmHomePage })),
+)
+const CreateAdmRequestPage = lazy(() =>
+  import('@/pages/administration/CreateAdmRequestPage').then((module) => ({ default: module.CreateAdmRequestPage })),
+)
+const MyAdmRequestsPage = lazy(() =>
+  import('@/pages/administration/MyAdmRequestsPage').then((module) => ({ default: module.MyAdmRequestsPage })),
+)
+const AdmRequestDetailPage = lazy(() =>
+  import('@/pages/administration/AdmRequestDetailPage').then((module) => ({ default: module.AdmRequestDetailPage })),
+)
+const AdmProfilePage = lazy(() =>
+  import('@/pages/administration/AdmProfilePage').then((module) => ({ default: module.AdmProfilePage })),
+)
+const AdmAdminDashboardPage = lazy(() =>
+  import('@/pages/administration/admin/AdmAdminDashboardPage').then((module) => ({
+    default: module.AdmAdminDashboardPage,
+  })),
+)
+const AdmAdminRequestsPage = lazy(() =>
+  import('@/pages/administration/admin/AdmAdminRequestsPage').then((module) => ({
+    default: module.AdmAdminRequestsPage,
+  })),
+)
+const AdmAdminRequestWorkspacePage = lazy(() =>
+  import('@/pages/administration/admin/AdmAdminRequestWorkspacePage').then((module) => ({
+    default: module.AdmAdminRequestWorkspacePage,
+  })),
+)
+const AdmInsurancePage = lazy(() =>
+  import('@/pages/administration/admin/AdmInsurancePage').then((module) => ({ default: module.AdmInsurancePage })),
+)
+const AdmVehiclesPage = lazy(() =>
+  import('@/pages/administration/admin/AdmVehiclesPage').then((module) => ({ default: module.AdmVehiclesPage })),
+)
+const AdmDriversPage = lazy(() =>
+  import('@/pages/administration/admin/AdmDriversPage').then((module) => ({ default: module.AdmDriversPage })),
+)
+const AdmFuelCardsPage = lazy(() =>
+  import('@/pages/administration/admin/AdmFuelCardsPage').then((module) => ({ default: module.AdmFuelCardsPage })),
+)
+const AdmReportsPage = lazy(() =>
+  import('@/pages/administration/admin/AdmReportsPage').then((module) => ({ default: module.AdmReportsPage })),
+)
+const AdmSettingsPage = lazy(() =>
+  import('@/pages/administration/admin/AdmSettingsPage').then((module) => ({ default: module.AdmSettingsPage })),
 )
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })))
 
@@ -217,6 +267,94 @@ export function AppRoutes() {
             }
           />
           <Route path={paths.hr.admin.requestDetail()} element={<HrAdminRequestWorkspacePage />} />
+        </Route>
+        <Route
+          element={
+            <ProtectedRoute>
+              <AdministrationEmployeeLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path={paths.administration.index} element={<AdmHomePage />} />
+          <Route
+            path={paths.administration.submit}
+            element={
+              <ProtectedRoute permission="adm.requests.create">
+                <CreateAdmRequestPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={paths.administration.requests}
+            element={
+              <ProtectedRoute permission="adm.requests.view_own">
+                <MyAdmRequestsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path={paths.administration.detail()} element={<AdmRequestDetailPage />} />
+          <Route path={paths.administration.profile} element={<AdmProfilePage />} />
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute roles={ADM_DESK_ROLES} permission="adm.requests.view_any">
+              <AdministrationAdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path={paths.administration.admin.index} element={<AdmAdminDashboardPage />} />
+          <Route path={paths.administration.admin.requests} element={<AdmAdminRequestsPage />} />
+          <Route path={paths.administration.admin.assigned} element={<AdmAdminRequestsPage assignedOnly />} />
+          <Route
+            path={paths.administration.admin.insurance}
+            element={
+              <ProtectedRoute permission="adm.registers.view">
+                <AdmInsurancePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={paths.administration.admin.vehicles}
+            element={
+              <ProtectedRoute permission="adm.registers.view">
+                <AdmVehiclesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={paths.administration.admin.drivers}
+            element={
+              <ProtectedRoute permission="adm.registers.view">
+                <AdmDriversPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={paths.administration.admin.fuelCards}
+            element={
+              <ProtectedRoute permission="adm.registers.view">
+                <AdmFuelCardsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={paths.administration.admin.reports}
+            element={
+              <ProtectedRoute permission="adm.reports.view">
+                <AdmReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path={paths.administration.admin.settings}
+            element={
+              <ProtectedRoute permission="adm.sla.manage">
+                <AdmSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path={paths.administration.admin.requestDetail()} element={<AdmAdminRequestWorkspacePage />} />
         </Route>
         <Route
           element={

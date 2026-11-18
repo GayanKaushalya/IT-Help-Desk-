@@ -15,7 +15,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/hooks/useToast'
 import { ApiError } from '@/types/api'
 
-export type ProfileDesk = 'it' | 'hr'
+export type ProfileDesk = 'it' | 'hr' | 'administration'
 
 export interface ProfilePageProps {
   /** Which help desk shell this profile belongs to. */
@@ -28,6 +28,7 @@ export function ProfilePage({ desk = 'it' }: ProfilePageProps) {
   const updateProfile = useUpdateProfile()
   const changePassword = useChangePassword()
   const isHr = desk === 'hr'
+  const isAdm = desk === 'administration'
 
   const [contact, setContact] = useState({
     email: user?.email ?? '',
@@ -94,11 +95,13 @@ export function ProfilePage({ desk = 'it' }: ProfilePageProps) {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={isHr ? 'HR profile' : 'IT Helpdesk profile'}
+        title={isAdm ? 'Administration profile' : isHr ? 'HR profile' : 'IT Helpdesk profile'}
         description={
-          isHr
-            ? 'Your HR Help Desk account details and password.'
-            : 'Your IT Helpdesk account details and password.'
+          isAdm
+            ? 'Your Administration Help Desk account details and password.'
+            : isHr
+              ? 'Your HR Help Desk account details and password.'
+              : 'Your IT Helpdesk account details and password.'
         }
       />
 
@@ -106,7 +109,7 @@ export function ProfilePage({ desk = 'it' }: ProfilePageProps) {
         <Card>
           <CardHeader
             title="Account"
-            description={isHr ? 'These identifiers are managed by HR / IT administration.' : 'These identifiers are managed by IT.'}
+            description={isHr || isAdm ? 'These identifiers are managed by HR / IT administration.' : 'These identifiers are managed by IT.'}
           />
           <CardContent>
             <DescriptionList>
@@ -123,7 +126,7 @@ export function ProfilePage({ desk = 'it' }: ProfilePageProps) {
               <DescriptionItem label="Role">{user.role?.name ?? '—'}</DescriptionItem>
               <DescriptionItem label="Branch">{user.branch?.name ?? '—'}</DescriptionItem>
               <DescriptionItem label="Department">{user.department?.name ?? '—'}</DescriptionItem>
-              <DescriptionItem label="Help desk">{isHr ? 'HR Help Desk' : 'IT Helpdesk'}</DescriptionItem>
+              <DescriptionItem label="Help desk">{isAdm ? 'Administration Help Desk' : isHr ? 'HR Help Desk' : 'IT Helpdesk'}</DescriptionItem>
             </DescriptionList>
           </CardContent>
         </Card>
@@ -131,7 +134,7 @@ export function ProfilePage({ desk = 'it' }: ProfilePageProps) {
         <Card>
           <CardHeader
             title="Contact details"
-            description={isHr ? 'Used when HR needs to reach you about a request.' : 'Used when IT needs to reach you.'}
+            description={isAdm ? 'Used when Administration needs to reach you about a request.' : isHr ? 'Used when HR needs to reach you about a request.' : 'Used when IT needs to reach you.'}
           />
           <Form onSubmit={handleContact}>
             <CardContent className="space-y-4">
