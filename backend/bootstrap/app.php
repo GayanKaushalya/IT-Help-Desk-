@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
         $schedule->command('hr:escalate-overdue')->hourly();
+        $schedule->command('adm:insurance-reminders')->dailyAt('08:00')->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [
