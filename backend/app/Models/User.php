@@ -101,6 +101,18 @@ class User extends Authenticatable
         return $this->hasMany(HrRequest::class, 'assigned_to');
     }
 
+    /** Administration requests currently owned by this user as the primary assignee. */
+    public function assignedAdmRequests(): HasMany
+    {
+        return $this->hasMany(AdmRequest::class, 'assigned_to');
+    }
+
+    /** Administration requests this user raised. */
+    public function admRequests(): HasMany
+    {
+        return $this->hasMany(AdmRequest::class, 'requester_id');
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(TicketComment::class, 'author_id');
@@ -144,6 +156,71 @@ class User extends Authenticatable
     public function isHrStaff(): bool
     {
         return in_array($this->resolveRole()?->slug, RoleSlug::hrStaffSlugs(), true);
+    }
+
+    public function isAdministrationStaff(): bool
+    {
+        return in_array($this->resolveRole()?->slug, RoleSlug::administrationStaffSlugs(), true);
+    }
+
+    /**
+     * Administration desk accounts (officers, managers, specialists) that
+     * appear in the assign picker. IT administrators stay out of the list.
+     */
+    public function isAssignableAdmAgent(): bool
+    {
+        if (! $this->canAccessSystem()) {
+            return false;
+        }
+
+        if (! in_array($this->resolveRole()?->slug, RoleSlug::administrationDeskSlugs(), true)) {
+            return false;
+        }
+
+        $keywords = config('administration.assignable_name_keywords', []);
+        if (! is_array($keywords) || $keywords === []) {
+            return true;
+        }
+
+        $name = mb_strtolower($this->full_name);
+
+        foreach ($keywords as $keyword) {
+            if (is_string($keyword) && $keyword !== '' && str_contains($name, mb_strtolower($keyword))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     * @return Builder<User>
+     */
+    public function scopeAssignableAdmAgents(Builder $query): Builder
+    {
+        $keywords = config('administration.assignable_name_keywords', []);
+
+        $query
+            ->active()
+            ->whereHas(
+                'role',
+                fn (Builder $role) => $role->whereIn('slug', RoleSlug::administrationDeskSlugs()),
+            );
+
+        if (is_array($keywords) && $keywords !== []) {
+            $query->where(function (Builder $inner) use ($keywords): void {
+                foreach ($keywords as $keyword) {
+                    if (! is_string($keyword) || $keyword === '') {
+                        continue;
+                    }
+
+                    $inner->orWhere('full_name', 'like', '%'.$keyword.'%');
+                }
+            });
+        }
+
+        return $query;
     }
 
     /**
@@ -309,5 +386,10 @@ class User extends Authenticatable
     public function scopeHrStaff(Builder $query): Builder
     {
         return $query->whereHas('role', fn (Builder $role) => $role->whereIn('slug', RoleSlug::hrStaffSlugs()));
+    }
+
+    public function scopeAdministrationStaff(Builder $query): Builder
+    {
+        return $query->whereHas('role', fn (Builder $role) => $role->whereIn('slug', RoleSlug::administrationStaffSlugs()));
     }
 }

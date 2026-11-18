@@ -25,6 +25,9 @@ class RoleSeeder extends Seeder
             'hr.requests.view_own',
             'hr.requests.create',
             'hr.requests.comment',
+            'adm.requests.view_own',
+            'adm.requests.create',
+            'adm.requests.comment',
         ];
 
         $technician = [
@@ -47,11 +50,15 @@ class RoleSeeder extends Seeder
             'reports.view',
         ];
 
-        // HR staff also act as employees on the IT desk (raise and track tickets).
+        // HR staff also act as employees on the IT desk (raise and track tickets)
+        // and on the Administration desk.
         $hrAsEmployeeIt = [
             'tickets.view_own',
             'tickets.create',
             'tickets.comment',
+            'adm.requests.view_own',
+            'adm.requests.create',
+            'adm.requests.comment',
         ];
 
         $hrOfficer = [
@@ -79,10 +86,57 @@ class RoleSeeder extends Seeder
             'users.view',
         ];
 
-        // System Administrators (IT) administer both desks.
+        // Administration desk: staff also act as employees on the IT and HR desks.
+        $admAsEmployee = [
+            'tickets.view_own',
+            'tickets.create',
+            'tickets.comment',
+            'hr.requests.view_own',
+            'hr.requests.create',
+            'hr.requests.comment',
+            'adm.requests.view_own',
+            'adm.requests.create',
+            'adm.requests.comment',
+        ];
+
+        $admStaff = [
+            ...$admAsEmployee,
+            'adm.requests.view_any',
+            'adm.requests.assign',
+            'adm.requests.update_status',
+            'adm.requests.comment_internal',
+            'adm.requests.resolve',
+            'adm.registers.view',
+            'adm.reports.view',
+        ];
+
+        // Domain officers keep their own registers (policies, fleet) up to date.
+        $admRegisterOfficer = [
+            ...$admStaff,
+            'adm.registers.manage',
+        ];
+
+        $cctvApprover = [
+            ...$admStaff,
+            'adm.cctv.approve',
+        ];
+
+        $admManager = [
+            ...$admStaff,
+            'adm.registers.manage',
+            'adm.cctv.approve',
+            'adm.categories.manage',
+            'adm.sla.manage',
+            'adm.reports.export',
+            'adm.settings.manage',
+            'users.view',
+        ];
+
+        // System Administrators (IT) administer all desks.
         $administrator = [
             ...$supervisor,
             ...$hrManager,
+            ...$admManager,
             'tickets.delete',
             'users.create',
             'users.update',
@@ -135,6 +189,12 @@ class RoleSeeder extends Seeder
             RoleSlug::HrManager->value => $hrManager,
             RoleSlug::FinanceOfficer->value => $financeOfficer,
             RoleSlug::ConfidentialComplaintHandler->value => $confidentialHandler,
+            RoleSlug::AdministrationOfficer->value => $admStaff,
+            RoleSlug::AdministrationManager->value => $admManager,
+            RoleSlug::InsuranceOfficer->value => $admRegisterOfficer,
+            RoleSlug::FleetOfficer->value => $admRegisterOfficer,
+            RoleSlug::SecurityOfficer->value => $admStaff,
+            RoleSlug::CctvApprover->value => $cctvApprover,
         ];
 
         foreach ($matrix as $slug => $permissions) {

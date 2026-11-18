@@ -21,6 +21,12 @@ enum RoleSlug: string
     case HrManager = 'hr-manager';
     case FinanceOfficer = 'finance-officer';
     case ConfidentialComplaintHandler = 'confidential-complaint-handler';
+    case AdministrationOfficer = 'administration-officer';
+    case AdministrationManager = 'administration-manager';
+    case InsuranceOfficer = 'insurance-officer';
+    case FleetOfficer = 'fleet-officer';
+    case SecurityOfficer = 'security-officer';
+    case CctvApprover = 'cctv-approver';
 
     public function label(): string
     {
@@ -34,6 +40,12 @@ enum RoleSlug: string
             self::HrManager => 'HR Manager',
             self::FinanceOfficer => 'Finance Officer',
             self::ConfidentialComplaintHandler => 'Confidential Complaint Handler',
+            self::AdministrationOfficer => 'Administration Officer',
+            self::AdministrationManager => 'Administration Manager',
+            self::InsuranceOfficer => 'Insurance Officer',
+            self::FleetOfficer => 'Fleet Officer',
+            self::SecurityOfficer => 'Security Officer',
+            self::CctvApprover => 'CCTV Approver',
         };
     }
 
@@ -48,6 +60,12 @@ enum RoleSlug: string
             self::Technician => 30,
             self::ConfidentialComplaintHandler => 35,
             self::HrOfficer => 40,
+            self::AdministrationOfficer => 40,
+            self::InsuranceOfficer => 40,
+            self::FleetOfficer => 40,
+            self::SecurityOfficer => 40,
+            self::CctvApprover => 40,
+            self::AdministrationManager => 70,
             self::Supervisor => 50,
             self::HrManager => 70,
             self::Administrator => 80,
@@ -100,4 +118,34 @@ enum RoleSlug: string
             self::SuperAdmin->value,
         ];
     }
-}
+
+    /**
+     * Roles that may reach the Administration help desk staff area.
+     *
+     * @return array<int, string>
+     */
+    public static function administrationStaffSlugs(): array
+    {
+        return [
+            ...self::administrationDeskSlugs(),
+            self::Administrator->value,
+            self::SuperAdmin->value,
+        ];
+    }
+
+    /**
+     * Administration desk roles that can be assigned requests.
+     *
+     * @return array<int, string>
+     */
+    public static function administrationDeskSlugs(): array
+    {
+        return [
+            self::AdministrationOfficer->value,
+            self::AdministrationManager->value,
+            self::InsuranceOfficer->value,
+            self::FleetOfficer->value,
+            self::SecurityOfficer->value,
+            self::CctvApprover->value,
+        ];
+    }}

@@ -76,6 +76,24 @@ class PermissionSeeder extends Seeder
                 'hr.reports.export' => 'Export HR reports',
                 'hr.settings.manage' => 'Manage HR settings',
             ],
+            'administration' => [
+                'adm.requests.view_own' => 'View own Administration requests',
+                'adm.requests.create' => 'Submit Administration requests',
+                'adm.requests.comment' => 'Comment on Administration requests',
+                'adm.requests.view_any' => 'View Administration requests',
+                'adm.requests.assign' => 'Assign Administration requests',
+                'adm.requests.update_status' => 'Update Administration request status',
+                'adm.requests.comment_internal' => 'Add internal Administration notes',
+                'adm.requests.resolve' => 'Resolve and close Administration requests',
+                'adm.registers.view' => 'View Administration registers',
+                'adm.registers.manage' => 'Manage Administration registers',
+                'adm.cctv.approve' => 'Approve or reject CCTV footage and surveillance requests',
+                'adm.categories.manage' => 'Manage Administration categories and request types',
+                'adm.sla.manage' => 'Manage Administration SLA settings',
+                'adm.reports.view' => 'View Administration reports',
+                'adm.reports.export' => 'Export Administration reports',
+                'adm.settings.manage' => 'Manage Administration settings',
+            ],
         ];
     }
 
