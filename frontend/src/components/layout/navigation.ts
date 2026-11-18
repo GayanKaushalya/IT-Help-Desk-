@@ -1,4 +1,4 @@
-import { BookOpen, LayoutDashboard, LayoutGrid, LifeBuoy, Palette, Ticket, UserRound, Users } from 'lucide-react'
+import { BookOpen, Building2, LayoutDashboard, LayoutGrid, LifeBuoy, Palette, Ticket, UserRound, Users } from 'lucide-react'
 import type { ComponentType } from 'react'
 
 import { paths } from '@/routes/paths'
@@ -40,6 +40,7 @@ export const navigationSections: NavigationSection[] = [
     items: [
       { label: 'Help Desks', to: paths.desks, icon: LayoutGrid },
       { label: 'HR Help Desk', to: paths.hr.index, icon: Users, permission: 'hr.requests.view_own' },
+      { label: 'Administration Help Desk', to: paths.administration.index, icon: Building2, permission: 'adm.requests.view_own' },
     ],
   },
   {
