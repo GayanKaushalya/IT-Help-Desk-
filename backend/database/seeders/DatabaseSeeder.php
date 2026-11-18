@@ -24,6 +24,8 @@ class DatabaseSeeder extends Seeder
             TicketCategorySeeder::class,
             HrRequestStatusSeeder::class,
             HrCategorySeeder::class,
+            AdmRequestStatusSeeder::class,
+            AdmCategorySeeder::class,
             SuperAdminSeeder::class,
         ]);
     }
