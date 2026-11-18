@@ -68,12 +68,12 @@ class NotificationController extends Controller
     }
 
     /**
-     * @return 'it'|'hr'|null
+     * @return 'it'|'hr'|'administration'|null
      */
     private function module(Request $request): ?string
     {
         $module = $request->query('module');
 
-        return in_array($module, ['it', 'hr'], true) ? $module : null;
+        return in_array($module, ['it', 'hr', 'administration'], true) ? $module : null;
     }
 }

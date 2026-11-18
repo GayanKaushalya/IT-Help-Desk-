@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Support;
 
 use App\Models\Branch;
+use App\Models\AdmRequest;
 use App\Models\HrRequest;
 use App\Models\KnowledgeArticle;
 use App\Models\Ticket;
@@ -58,6 +59,16 @@ final class AuditEvent
             'hr_request.status_changed' => 'HR request status changed',
             'hr_request.referred' => 'HR request referred',
             'hr_request.referral_responded' => 'HR referral responded',
+            'adm_request.created' => 'Administration request created',
+            'adm_request.assigned' => 'Administration request assigned',
+            'adm_request.status_changed' => 'Administration request status changed',
+            'adm_request.resolved' => 'Administration request resolved',
+            'adm_request.verified' => 'Administration request verified',
+            'adm_request.closed' => 'Administration request closed',
+            'adm_request.verification_rejected' => 'Administration resolution rejected',
+            'adm_request.comment_added' => 'Administration request comment added',
+            'adm_request.internal_note_added' => 'Administration internal note added',
+            'adm_request.attachments_added' => 'Administration attachments added',
             'user.profile_updated' => 'Profile updated',
             'user.password_changed' => 'Password changed',
             'category.created' => 'Category created',
@@ -127,6 +138,7 @@ final class AuditEvent
             'user' => User::class,
             'ticket' => Ticket::class,
             'hr_request' => HrRequest::class,
+            'adm_request' => AdmRequest::class,
             'branch' => Branch::class,
             'category' => TicketCategory::class,
             'priority' => TicketPriority::class,
@@ -147,6 +159,10 @@ final class AuditEvent
 
         if (str_starts_with($event, 'hr_request.') || str_starts_with($event, 'hr.')) {
             return 'hr_request';
+        }
+
+        if (str_starts_with($event, 'adm_request.')) {
+            return 'adm_request';
         }
 
         if (str_starts_with($event, 'settings.')) {

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\AdmRequest;
+use App\Models\AdmRequestStatus;
 use App\Models\HrDepartmentReferral;
 use App\Models\HrRequest;
 use App\Models\HrRequestStatus;
@@ -505,8 +507,197 @@ class NotificationService
         );
     }
 
+    // -----------------------------------------------------------------
+    // Administration Helpdesk
+    // -----------------------------------------------------------------
+
+    public function admRequestCreated(AdmRequest $request, User $actor): void
+    {
+        $request->loadMissing('requester');
+        $payload = $this->admPayload($request);
+
+        if ($request->requester) {
+            $this->notify(
+                $request->requester,
+                'adm.request.created',
+                'Administration request submitted',
+                $request->reference.' has been submitted to Administration.',
+                $payload,
+            );
+        }
+
+        $this->notifyMany(
+            $this->admStaffFor($request, $actor->id),
+            'adm.request.new',
+            'New Administration request',
+            $request->reference.': '.$request->subject,
+            $payload,
+        );
+    }
+
+    public function admRequestAssigned(AdmRequest $request, User $actor, User $assignee): void
+    {
+        $request->loadMissing('requester');
+        $payload = $this->admPayload($request);
+
+        if ($request->requester && $request->requester->id !== $actor->id) {
+            $this->notify(
+                $request->requester,
+                'adm.request.assigned',
+                'Administration request assigned',
+                $request->reference.' has been assigned to '.$assignee->full_name.'.',
+                $payload,
+            );
+        }
+
+        if ($assignee->id !== $actor->id) {
+            $this->notify(
+                $assignee,
+                'adm.request.assigned',
+                'Administration request assigned to you',
+                $request->reference.' was assigned to you.',
+                $payload,
+            );
+        }
+    }
+
+    public function admRequestStatusChanged(AdmRequest $request, User $actor, ?AdmRequestStatus $from = null): void
+    {
+        $request->loadMissing(['requester', 'assignee', 'status']);
+        $payload = $this->admPayload($request);
+        $statusName = $request->status?->name ?? 'a new status';
+        $extra = ['from_status' => $from?->slug, 'to_status' => $request->status?->slug];
+
+        if ($request->requester && $request->requester->id !== $actor->id) {
+            $this->notify(
+                $request->requester,
+                'adm.request.status_changed',
+                'Administration request updated',
+                $request->reference.' is now '.$statusName.'.',
+                $payload + $extra,
+            );
+        }
+
+        if ($request->assignee && $request->assignee->id !== $actor->id) {
+            $this->notify(
+                $request->assignee,
+                'adm.request.status_changed',
+                'Administration request status changed',
+                $actor->full_name.' moved '.$request->reference.' to '.$statusName.'.',
+                $payload + $extra,
+            );
+        }
+    }
+
+    public function admRequestCommented(AdmRequest $request, User $actor, bool $internal = false): void
+    {
+        $request->loadMissing(['requester', 'assignee']);
+        $payload = $this->admPayload($request);
+
+        if ($internal) {
+            if ($request->assignee && $request->assignee->id !== $actor->id) {
+                $this->notify(
+                    $request->assignee,
+                    'adm.request.commented',
+                    'Internal note added',
+                    $actor->full_name.' added a note on '.$request->reference.'.',
+                    $payload,
+                );
+            }
+
+            return;
+        }
+
+        if ((int) $request->requester_id === (int) $actor->id) {
+            $this->notifyMany(
+                $this->admStaffFor($request, $actor->id),
+                'adm.request.commented',
+                'Employee replied',
+                $actor->full_name.' replied on '.$request->reference.'.',
+                $payload,
+            );
+
+            return;
+        }
+
+        if ($request->requester) {
+            $this->notify(
+                $request->requester,
+                'adm.request.commented',
+                'Administration added an update',
+                'Administration added an update on '.$request->reference.'.',
+                $payload,
+            );
+        }
+    }
+
+    public function admRequestResolved(AdmRequest $request, User $actor): void
+    {
+        $request->loadMissing('requester');
+
+        if (! $request->requester || $request->requester->id === $actor->id) {
+            return;
+        }
+
+        $this->notify(
+            $request->requester,
+            'adm.request.resolved',
+            'Administration request resolved',
+            $request->reference.' has been marked resolved.',
+            $this->admPayload($request),
+        );
+    }
+
+    public function admVerificationRequired(AdmRequest $request, User $actor): void
+    {
+        $request->loadMissing('requester');
+
+        if (! $request->requester || $request->requester->id === $actor->id) {
+            return;
+        }
+
+        $this->notify(
+            $request->requester,
+            'adm.request.verification_required',
+            'Please confirm resolution',
+            'Confirm whether '.$request->reference.' is resolved, or tell Administration if you still need help.',
+            $this->admPayload($request),
+        );
+    }
+
+    public function admRequestClosed(AdmRequest $request, User $actor): void
+    {
+        $request->loadMissing(['requester', 'assignee', 'status']);
+        $payload = $this->admPayload($request);
+        $statusName = strtolower($request->status?->name ?? 'closed');
+
+        if ($request->requester && $request->requester->id !== $actor->id) {
+            $this->notify(
+                $request->requester,
+                'adm.request.closed',
+                'Administration request '.$statusName,
+                $request->reference.' has been '.$statusName.'.',
+                $payload,
+            );
+        }
+
+        $staff = collect([$request->assignee])
+            ->filter(fn ($user) => $user instanceof User && $user->id !== $actor->id)
+            ->unique('id');
+
+        $this->notifyMany(
+            $staff,
+            $request->status?->slug === 'closed' ? 'adm.request.verified' : 'adm.request.closed',
+            $request->status?->slug === 'closed' ? 'Verification completed' : 'Administration request '.$statusName,
+            $request->status?->slug === 'closed'
+                ? $actor->full_name.' verified and closed '.$request->reference.'.'
+                : $actor->full_name.' marked '.$request->reference.' as '.$statusName.'.',
+            $payload,
+        );
+    }
+
     /**
-     * @param  'it'|'hr'|null  $module
+     * @param  'it'|'hr'|'administration'|null  $module
      * @return Collection<int, UserNotification>
      */
     public function recent(User $user, int $limit = self::RECENT_LIMIT, ?string $module = null): Collection
@@ -520,7 +711,7 @@ class NotificationService
     }
 
     /**
-     * @param  'it'|'hr'|null  $module
+     * @param  'it'|'hr'|'administration'|null  $module
      */
     public function unreadCount(User $user, ?string $module = null): int
     {
@@ -543,7 +734,7 @@ class NotificationService
     }
 
     /**
-     * @param  'it'|'hr'|null  $module
+     * @param  'it'|'hr'|'administration'|null  $module
      */
     public function markAllRead(User $user, ?string $module = null): int
     {
@@ -560,7 +751,7 @@ class NotificationService
      * data->json path helpers used elsewhere on MySQL.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\UserNotification>|\Illuminate\Database\Query\Builder  $query
-     * @param  'it'|'hr'|null  $module
+     * @param  'it'|'hr'|'administration'|null  $module
      */
     private function applyModuleFilter($query, ?string $module): void
     {
@@ -570,8 +761,14 @@ class NotificationService
             return;
         }
 
+        if ($module === 'administration') {
+            $query->where('type', 'like', 'adm.%');
+
+            return;
+        }
+
         if ($module === 'it') {
-            $query->where('type', 'not like', 'hr.%');
+            $query->where('type', 'not like', 'hr.%')->where('type', 'not like', 'adm.%');
         }
     }
 
@@ -617,6 +814,34 @@ class NotificationService
         ];
     }
 
+    /**
+     * Active Administration desk staff allowed to see the request.
+     *
+     * @return Collection<int, User>
+     */
+    private function admStaffFor(AdmRequest $request, int $actorId): Collection
+    {
+        return User::query()
+            ->administrationStaff()
+            ->active()
+            ->where('id', '<>', $actorId)
+            ->with('role.permissions')
+            ->get()
+            ->filter(fn (User $user) => $user->can('view', $request))
+            ->values();
+    }
+
+    /**
+     * @return array{module: string, adm_request_id: int, reference: string}
+     */
+    private function admPayload(AdmRequest $request): array
+    {
+        return [
+            'module' => 'administration',
+            'adm_request_id' => (int) $request->id,
+            'reference' => (string) $request->reference,
+        ];
+    }
     /**
      * @return array{module: string, ticket_id: int, reference: string}
      */
