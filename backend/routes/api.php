@@ -10,6 +10,21 @@ use App\Http\Controllers\Api\V1\Admin\AdminDirectoryController;
 use App\Http\Controllers\Api\V1\Admin\AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\AdminSettingController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+use App\Http\Controllers\Api\V1\Administration\AdmEmployeeDashboardController;
+use App\Http\Controllers\Api\V1\Administration\AdmLookupController;
+use App\Http\Controllers\Api\V1\Administration\AdmRequestCommentController;
+use App\Http\Controllers\Api\V1\Administration\AdmRequestController;
+use App\Http\Controllers\Api\V1\Administration\Staff\AdmCctvApprovalController;
+use App\Http\Controllers\Api\V1\Administration\Staff\AdmDashboardController;
+use App\Http\Controllers\Api\V1\Administration\Staff\AdmReportController;
+use App\Http\Controllers\Api\V1\Administration\Staff\AdmSlaController;
+use App\Http\Controllers\Api\V1\Administration\Staff\AdmStaffRequestController;
+use App\Http\Controllers\Api\V1\Administration\Staff\Registers\DriverController;
+use App\Http\Controllers\Api\V1\Administration\Staff\Registers\FuelCardController;
+use App\Http\Controllers\Api\V1\Administration\Staff\Registers\InsurancePolicyController;
+use App\Http\Controllers\Api\V1\Administration\Staff\Registers\RegisterLookupController;
+use App\Http\Controllers\Api\V1\Administration\Staff\Registers\VehicleAllocationController;
+use App\Http\Controllers\Api\V1\Administration\Staff\Registers\VehicleController;
 use App\Http\Controllers\Api\V1\Hr\HrEmployeeDashboardController;
 use App\Http\Controllers\Api\V1\Hr\HrLookupController;
 use App\Http\Controllers\Api\V1\Hr\HrRequestCommentController;
@@ -196,6 +211,130 @@ Route::prefix('v1')->as('api.v1.')->group(function (): void {
                 });
         });
 
+        /*
+        | Administration helpdesk -----------------------------------------
+        */
+        Route::prefix('administration')->as('administration.')->group(function (): void {
+            Route::get('lookups', [AdmLookupController::class, 'index'])->name('lookups.index');
+            Route::get('dashboard', [AdmEmployeeDashboardController::class, 'show'])->name('dashboard.show');
+            Route::get('requests', [AdmRequestController::class, 'index'])->name('requests.index');
+            Route::post('requests', [AdmRequestController::class, 'store'])
+                ->middleware('throttle:uploads')
+                ->name('requests.store');
+            Route::get('requests/track/{reference}', [AdmRequestController::class, 'track'])->name('requests.track');
+            Route::post('requests/{adm_request}/comments', [AdmRequestCommentController::class, 'store'])
+                ->name('requests.comments.store');
+            Route::post('requests/{adm_request}/verify', [AdmRequestController::class, 'verify'])
+                ->middleware('throttle:verify')
+                ->name('requests.verify');
+            Route::get('requests/{adm_request}/attachments/{attachment}', [AdmRequestController::class, 'downloadAttachment'])
+                ->whereNumber('attachment')
+                ->name('requests.attachments.show');
+            Route::get('requests/{adm_request}', [AdmRequestController::class, 'show'])->name('requests.show');
+
+            /*
+            | Administration staff area -----------------------------------
+            */
+            Route::prefix('staff')
+                ->as('staff.')
+                ->middleware('role:'.implode(',', RoleSlug::administrationStaffSlugs()))
+                ->group(function (): void {
+                    Route::get('dashboard', [AdmDashboardController::class, 'show'])->name('dashboard.show');
+                    Route::get('agents', [AdmStaffRequestController::class, 'agents'])->name('agents.index');
+
+                    Route::get('requests', [AdmStaffRequestController::class, 'index'])->name('requests.index');
+                    Route::get('requests/assigned', [AdmStaffRequestController::class, 'assigned'])->name('requests.assigned');
+                    Route::get('requests/{adm_request}', [AdmStaffRequestController::class, 'show'])->name('requests.show');
+                    Route::post('requests/{adm_request}/assign', [AdmStaffRequestController::class, 'assign'])
+                        ->name('requests.assign');
+                    Route::patch('requests/{adm_request}/status', [AdmStaffRequestController::class, 'updateStatus'])
+                        ->name('requests.status');
+                    Route::post('requests/{adm_request}/resolve', [AdmStaffRequestController::class, 'resolve'])
+                        ->name('requests.resolve');
+                    Route::post('requests/{adm_request}/close-as-verified', [AdmStaffRequestController::class, 'closeAsVerified'])
+                        ->name('requests.close-as-verified');
+                    Route::post('requests/{adm_request}/comments', [AdmStaffRequestController::class, 'comment'])
+                        ->name('requests.comments.store');
+                    Route::post('requests/{adm_request}/attachments', [AdmStaffRequestController::class, 'attach'])
+                        ->middleware('throttle:uploads')
+                        ->name('requests.attachments.store');
+
+                    // CCTV approvals
+                    Route::get('requests/{adm_request}/cctv', [AdmCctvApprovalController::class, 'show'])
+                        ->name('requests.cctv.show');
+                    Route::post('requests/{adm_request}/cctv/approve', [AdmCctvApprovalController::class, 'approve'])
+                        ->name('requests.cctv.approve');
+                    Route::post('requests/{adm_request}/cctv/reject', [AdmCctvApprovalController::class, 'reject'])
+                        ->name('requests.cctv.reject');
+
+                    // Reports and SLA
+                    Route::get('reports', [AdmReportController::class, 'show'])->name('reports.show');
+                    Route::get('sla', [AdmSlaController::class, 'index'])->name('sla.index');
+                    Route::patch('sla/categories/{category}', [AdmSlaController::class, 'updateCategory'])
+                        ->whereNumber('category')
+                        ->name('sla.categories.update');
+                    Route::patch('sla/types/{type}', [AdmSlaController::class, 'updateType'])
+                        ->whereNumber('type')
+                        ->name('sla.types.update');
+
+                    // Registers
+                    Route::prefix('registers')->as('registers.')->group(function (): void {
+                        Route::get('lookups', [RegisterLookupController::class, 'index'])->name('lookups');
+                        Route::get('lookups/users', [RegisterLookupController::class, 'users'])->name('lookups.users');
+
+                        Route::get('insurance', [InsurancePolicyController::class, 'index'])->name('insurance.index');
+                        Route::post('insurance', [InsurancePolicyController::class, 'store'])->name('insurance.store');
+                        Route::get('insurance/{policy}', [InsurancePolicyController::class, 'show'])
+                            ->whereNumber('policy')->name('insurance.show');
+                        Route::patch('insurance/{policy}', [InsurancePolicyController::class, 'update'])
+                            ->whereNumber('policy')->name('insurance.update');
+                        Route::delete('insurance/{policy}', [InsurancePolicyController::class, 'destroy'])
+                            ->whereNumber('policy')->name('insurance.destroy');
+                        Route::get('insurance/{policy}/history', [InsurancePolicyController::class, 'history'])
+                            ->whereNumber('policy')->name('insurance.history');
+                        Route::post('insurance/{policy}/document', [InsurancePolicyController::class, 'uploadDocument'])
+                            ->whereNumber('policy')->middleware('throttle:uploads')->name('insurance.document.store');
+                        Route::get('insurance/{policy}/document', [InsurancePolicyController::class, 'downloadDocument'])
+                            ->whereNumber('policy')->name('insurance.document.show');
+
+                        Route::get('vehicles', [VehicleController::class, 'index'])->name('vehicles.index');
+                        Route::post('vehicles', [VehicleController::class, 'store'])->name('vehicles.store');
+                        Route::get('vehicles/{vehicle}', [VehicleController::class, 'show'])
+                            ->whereNumber('vehicle')->name('vehicles.show');
+                        Route::patch('vehicles/{vehicle}', [VehicleController::class, 'update'])
+                            ->whereNumber('vehicle')->name('vehicles.update');
+                        Route::delete('vehicles/{vehicle}', [VehicleController::class, 'destroy'])
+                            ->whereNumber('vehicle')->name('vehicles.destroy');
+
+                        Route::get('drivers', [DriverController::class, 'index'])->name('drivers.index');
+                        Route::post('drivers', [DriverController::class, 'store'])->name('drivers.store');
+                        Route::get('drivers/{driver}', [DriverController::class, 'show'])
+                            ->whereNumber('driver')->name('drivers.show');
+                        Route::patch('drivers/{driver}', [DriverController::class, 'update'])
+                            ->whereNumber('driver')->name('drivers.update');
+                        Route::delete('drivers/{driver}', [DriverController::class, 'destroy'])
+                            ->whereNumber('driver')->name('drivers.destroy');
+
+                        Route::get('fuel-cards', [FuelCardController::class, 'index'])->name('fuel-cards.index');
+                        Route::post('fuel-cards', [FuelCardController::class, 'store'])->name('fuel-cards.store');
+                        Route::get('fuel-cards/{fuel_card}', [FuelCardController::class, 'show'])
+                            ->whereNumber('fuel_card')->name('fuel-cards.show');
+                        Route::patch('fuel-cards/{fuel_card}', [FuelCardController::class, 'update'])
+                            ->whereNumber('fuel_card')->name('fuel-cards.update');
+                        Route::delete('fuel-cards/{fuel_card}', [FuelCardController::class, 'destroy'])
+                            ->whereNumber('fuel_card')->name('fuel-cards.destroy');
+                        Route::get('fuel-cards/{fuel_card}/history', [FuelCardController::class, 'history'])
+                            ->whereNumber('fuel_card')->name('fuel-cards.history');
+
+                        Route::get('allocations', [VehicleAllocationController::class, 'index'])->name('allocations.index');
+                        Route::post('allocations', [VehicleAllocationController::class, 'store'])->name('allocations.store');
+                        Route::patch('allocations/{allocation}', [VehicleAllocationController::class, 'update'])
+                            ->whereNumber('allocation')->name('allocations.update');
+                        Route::post('allocations/{allocation}/cancel', [VehicleAllocationController::class, 'cancel'])
+                            ->whereNumber('allocation')->name('allocations.cancel');
+                    });
+                });
+        });
         /*
         | IT support area -------------------------------------------------
         */
