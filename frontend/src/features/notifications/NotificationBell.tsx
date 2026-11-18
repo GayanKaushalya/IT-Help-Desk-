@@ -37,12 +37,10 @@ export function NotificationBell({ desk, audience }: NotificationBellProps) {
 
   const unread = feed.data?.unread_count ?? 0
   const items = feed.data?.notifications ?? []
-  const label = desk === 'hr' ? 'HR notifications' : 'IT notifications'
+  const deskName = desk === 'administration' ? 'Administration' : desk === 'hr' ? 'HR' : 'IT'
+  const label = ` notifications`
 
-  const emptyCopy = useMemo(
-    () => (desk === 'hr' ? 'No HR notifications yet.' : 'No IT notifications yet.'),
-    [desk],
-  )
+  const emptyCopy = useMemo(() => `No ${deskName} notifications yet.`, [deskName])
 
   useEffect(() => {
     if (!open) return
@@ -79,6 +77,10 @@ export function NotificationBell({ desk, audience }: NotificationBellProps) {
       void queryClient.invalidateQueries({ queryKey: ['hr'] })
     }
 
+    if (data?.adm_request_id) {
+      void queryClient.invalidateQueries({ queryKey: ['administration'] })
+    }
+
     if (data?.ticket_id) {
       const ticketId = String(data.ticket_id)
       void queryClient.invalidateQueries({ queryKey: ['tickets', ticketId] })
@@ -91,13 +93,17 @@ export function NotificationBell({ desk, audience }: NotificationBellProps) {
 
     if (!href) {
       // Fall back to the desk queue when the payload has no target id.
-      void navigate(desk === 'hr'
+      void navigate(desk === 'administration'
         ? audience === 'staff'
-          ? paths.hr.admin.requests
-          : paths.hr.requests
-        : audience === 'staff'
-          ? paths.admin.tickets
-          : paths.tickets.index)
+          ? paths.administration.admin.requests
+          : paths.administration.requests
+        : desk === 'hr'
+          ? audience === 'staff'
+            ? paths.hr.admin.requests
+            : paths.hr.requests
+          : audience === 'staff'
+            ? paths.admin.tickets
+            : paths.tickets.index)
     }
   }
 

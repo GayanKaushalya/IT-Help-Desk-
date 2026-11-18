@@ -1,7 +1,7 @@
 import { apiClient } from '@/services/apiClient'
 import type { AppNotification, NotificationFeed } from '@/types/models'
 
-export type NotificationDesk = 'it' | 'hr'
+export type NotificationDesk = 'it' | 'hr' | 'administration'
 
 function deskParams(desk?: NotificationDesk): { module?: NotificationDesk } {
   return desk ? { module: desk } : {}

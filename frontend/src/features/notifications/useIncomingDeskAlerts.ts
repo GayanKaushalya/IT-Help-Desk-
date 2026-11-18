@@ -10,11 +10,16 @@ const POLL_MS = 12_000
 const ALERT_TYPES: Record<NotificationDesk, Set<string>> = {
   it: new Set(['ticket.new']),
   hr: new Set(['hr.request.new']),
+  administration: new Set(['adm.request.new']),
 }
 
 function workKey(desk: NotificationDesk, item: AppNotification): string {
   if (desk === 'it') {
     return `it:${String(item.data?.ticket_id ?? item.id)}`
+  }
+
+  if (desk === 'administration') {
+    return `administration:${String(item.data?.adm_request_id ?? item.id)}`
   }
 
   return `hr:${String(item.data?.hr_request_id ?? item.id)}`
@@ -38,6 +43,8 @@ export function useIncomingDeskAlerts(desk: NotificationDesk) {
       // Soft refresh — do not clear every staff query on each toast.
       if (desk === 'it') {
         void queryClient.invalidateQueries({ queryKey: ['staff', 'tickets'], exact: false })
+      } else if (desk === 'administration') {
+        void queryClient.invalidateQueries({ queryKey: ['administration', 'staff', 'requests'], exact: false })
       } else {
         void queryClient.invalidateQueries({ queryKey: ['hr', 'staff', 'requests'], exact: false })
       }

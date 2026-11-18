@@ -29,6 +29,15 @@ export function hrefForNotification(
 ): string | null {
   const data = parseNotificationData(notification)
 
+  if (desk === 'administration' || notification.type.startsWith('adm.')) {
+    const requestId = data?.adm_request_id
+    if (requestId == null || Number(requestId) <= 0) return null
+
+    return audience === 'staff'
+      ? paths.administration.admin.requestDetail(requestId)
+      : paths.administration.detail(requestId)
+  }
+
   if (desk === 'hr' || notification.type.startsWith('hr.')) {
     const requestId = data?.hr_request_id
     if (requestId == null || Number(requestId) <= 0) return null
