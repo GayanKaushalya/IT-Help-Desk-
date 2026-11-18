@@ -139,6 +139,53 @@
   --color-primary-950: #f8fafc;
 }
 
+/*
+  Administration help desk accent
+  -------------------------------
+  An amber scale (#D97706 as the primary action colour) used by the
+  Administration module. Screens opt in with data-desk="administration",
+  which re-points the semantic "primary" tokens at these ambers.
+*/
+@theme static {
+  --color-adm-50: #fffbeb;
+  --color-adm-100: #fef3c7;
+  --color-adm-200: #fde68a;
+  --color-adm-300: #fcd34d;
+  --color-adm-400: #fbbf24;
+  --color-adm-500: #f59e0b;
+  --color-adm-600: #d97706;
+  --color-adm-700: #b45309;
+  --color-adm-800: #92400e;
+  --color-adm-900: #78350f;
+  --color-adm-950: #451a03;
+}
+
+[data-desk='administration'] {
+  --color-primary-50: var(--color-adm-50);
+  --color-primary-100: var(--color-adm-100);
+  --color-primary-200: var(--color-adm-200);
+  --color-primary-300: var(--color-adm-300);
+  --color-primary-400: var(--color-adm-400);
+  --color-primary-500: var(--color-adm-500);
+  --color-primary-600: var(--color-adm-600);
+  --color-primary-700: var(--color-adm-700);
+  --color-primary-800: var(--color-adm-800);
+  --color-primary-900: var(--color-adm-900);
+  --color-primary-950: var(--color-adm-950);
+}
+
+/* Dark mode: keep washes dark and text light, as the blue scale does. */
+[data-theme='dark'][data-desk='administration'],
+[data-theme='dark'] [data-desk='administration'] {
+  --color-primary-50: #451a03;
+  --color-primary-100: #78350f;
+  --color-primary-200: #92400e;
+  --color-primary-700: #fde68a;
+  --color-primary-800: #fef3c7;
+  --color-primary-900: #fffbeb;
+  --color-primary-950: #f8fafc;
+}
+
 @keyframes fade-in {
   from {
     opacity: 0;

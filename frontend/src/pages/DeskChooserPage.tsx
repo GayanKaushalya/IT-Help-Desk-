@@ -1,11 +1,11 @@
-import { ArrowRight, Monitor, Users } from 'lucide-react'
+import { ArrowRight, Building2, Monitor, Users } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { Link } from 'react-router-dom'
 
 import { useAuth } from '@/hooks/useAuth'
 import { paths } from '@/routes/paths'
 import { cn } from '@/utils/cn'
-import { isDeskRole, isHrDeskRole } from '@/utils/roles'
+import { isAdministrationDeskRole, isDeskRole, isHrDeskRole } from '@/utils/roles'
 
 interface DeskCardProps {
   to: string
@@ -14,7 +14,7 @@ interface DeskCardProps {
   highlights: string[]
   cta: string
   icon: ComponentType<{ className?: string }>
-  tone: 'it' | 'hr'
+  tone: 'it' | 'hr' | 'administration'
 }
 
 const TONES = {
@@ -29,6 +29,12 @@ const TONES = {
     ring: 'hover:border-hr-300 focus-visible:outline-hr-500',
     dot: 'bg-hr-500',
     cta: 'text-hr-700',
+  },
+  administration: {
+    tile: 'bg-adm-600 text-white',
+    ring: 'hover:border-adm-300 focus-visible:outline-adm-500',
+    dot: 'bg-adm-500',
+    cta: 'text-adm-700',
   },
 } as const
 
@@ -69,12 +75,13 @@ function DeskCard({ to, title, description, highlights, cta, icon: Icon, tone }:
 }
 
 /**
- * Landing screen that lets a signed-in user pick the IT or HR help desk.
+ * Landing screen that lets a signed-in user pick the IT, HR or Administration help desk.
  *
  * IT desk operators open the IT service desk for queue work. Administrators
  * also open the HR service desk as admins. HR officers and managers open the
  * HR service desk for queue work, and the employee IT area when they need to
- * raise or track their own IT tickets.
+ * raise or track their own IT tickets. Administration desk roles open the
+ * Administration service desk for queue work.
  */
 export function DeskChooserPage() {
   const { user } = useAuth()
@@ -82,18 +89,20 @@ export function DeskChooserPage() {
 
   const opensItAdmin = isDeskRole(slug)
   const opensHrAdmin = isHrDeskRole(slug)
+  const opensAdmAdmin = isAdministrationDeskRole(slug)
 
   const itPath = opensItAdmin ? paths.admin.index : paths.dashboard
   const hrPath = opensHrAdmin ? paths.hr.admin.index : paths.hr.index
+  const admPath = opensAdmAdmin ? paths.administration.admin.index : paths.administration.index
 
   return (
     <div className="space-y-10">
       <div className="text-center">
         <h1 className="text-3xl font-semibold tracking-tight text-surface-900 sm:text-4xl">Indra Help Desk</h1>
-        <p className="mt-3 text-base text-surface-600">Welcome — choose IT or HR support for today.</p>
+        <p className="mt-3 text-base text-surface-600">Welcome — choose IT, HR or Administration support for today.</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <DeskCard
           to={itPath}
           tone="it"
@@ -112,6 +121,20 @@ export function DeskChooserPage() {
           description="Get help with payroll, leave, HR letters, employee records and workplace concerns."
           highlights={['Submit and track HR requests', 'Payroll, leave and documents', 'Confidential complaints']}
           cta={opensHrAdmin ? 'Open HR service desk' : 'Open HR Help Desk'}
+        />
+
+        <DeskCard
+          to={admPath}
+          tone="administration"
+          icon={Building2}
+          title="Administration Help Desk"
+          description="Arrange insurance, fleet, fuel cards, security, courier, maintenance and office facilities."
+          highlights={[
+            'Submit and track Administration requests',
+            'Insurance, fleet and fuel cards',
+            'Facilities, supplies and events',
+          ]}
+          cta={opensAdmAdmin ? 'Open Administration service desk' : 'Open Administration Help Desk'}
         />
       </div>
     </div>

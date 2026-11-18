@@ -21,6 +21,18 @@ export const HR_DESK_ROLES: RoleSlug[] = [
   'super-admin',
 ]
 
+/** Roles that may open the Administration help desk area (/administration/admin). */
+export const ADM_DESK_ROLES: RoleSlug[] = [
+  'administration-officer',
+  'administration-manager',
+  'insurance-officer',
+  'fleet-officer',
+  'security-officer',
+  'cctv-approver',
+  'administrator',
+  'super-admin',
+]
+
 /** Roles that may manage users, catalogue data and system settings. */
 export const ADMIN_ROLES: RoleSlug[] = ['administrator', 'super-admin']
 
@@ -34,6 +46,10 @@ export function isDeskRole(slug: RoleSlug | undefined): boolean {
 
 export function isHrDeskRole(slug: RoleSlug | undefined): boolean {
   return slug !== undefined && HR_DESK_ROLES.includes(slug)
+}
+
+export function isAdministrationDeskRole(slug: RoleSlug | undefined): boolean {
+  return slug !== undefined && ADM_DESK_ROLES.includes(slug)
 }
 
 /**
@@ -63,8 +79,10 @@ export function isDeepLinkPath(path: string | undefined): boolean {
   return (
     path.startsWith('/tickets/') ||
     path.startsWith('/hr/requests/') ||
+    path.startsWith('/administration/requests/') ||
     path.startsWith('/admin/tickets/') ||
     path.startsWith('/hr/admin/requests/') ||
+    path.startsWith('/administration/admin/requests/') ||
     path.startsWith('/knowledge-base/')
   )
 }

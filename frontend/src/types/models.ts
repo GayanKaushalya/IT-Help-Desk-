@@ -44,6 +44,12 @@ export type RoleSlug =
   | 'hr-manager'
   | 'finance-officer'
   | 'confidential-complaint-handler'
+  | 'administration-officer'
+  | 'administration-manager'
+  | 'insurance-officer'
+  | 'fleet-officer'
+  | 'security-officer'
+  | 'cctv-approver'
 
 export type AccountStatus = 'active' | 'inactive' | 'pending'
 
@@ -88,6 +94,7 @@ export interface AppNotification {
   data: {
     ticket_id?: number
     hr_request_id?: number
+    adm_request_id?: number
     module?: string
     reference?: string
   } | null
@@ -745,4 +752,207 @@ export interface HrReportOverview {
     aging: ChartBucket[]
     referrals: ChartBucket[]
   }
+}
+
+/* ------------------------------------------------------------------ *
+ * Administration help desk
+ * ------------------------------------------------------------------ */
+
+export interface AdmRequestType {
+  id: number
+  adm_category_id: number
+  slug: string
+  name: string
+  description: string | null
+  sla_hours: number | null
+  sort_order: number
+}
+
+export interface AdmCategory {
+  id: number
+  slug: string
+  name: string
+  description: string | null
+  default_sla_hours: number | null
+  sort_order: number
+  types?: AdmRequestType[]
+}
+
+export interface AdmStatus {
+  id: number
+  slug: string
+  name: string
+  color_token: ColorToken
+  is_open: boolean
+  is_terminal: boolean
+  sort_order: number
+}
+
+export interface AdmUserSummary {
+  id: number
+  full_name: string
+  is_administration_staff: boolean
+  username?: string
+  role?: string | null
+  open_requests?: number
+  total_assigned?: number
+}
+
+/** Assignable Administration desk agents with workload. */
+export interface AdmStaffWorkload {
+  id: number
+  full_name: string
+  username?: string
+  role?: string | null
+  is_administration_staff?: boolean
+  open_requests: number
+  total_assigned: number
+}
+
+export interface AdmAttachment {
+  id: number
+  original_name: string
+  mime_type: string
+  size_bytes: number
+  created_at: string | null
+  /** Relative to the API base (/api/v1). */
+  download_url: string
+}
+
+export interface AdmComment {
+  id: number
+  body: string
+  is_system: boolean
+  /** Only present on staff routes. */
+  is_internal?: boolean
+  created_at: string | null
+  author?: AdmUserSummary | null
+  attachments?: AdmAttachment[]
+}
+
+export interface AdmStatusHistoryEntry {
+  id: number
+  from_status?: AdmStatus | null
+  to_status?: AdmStatus | null
+  /** Staff routes only. */
+  remarks?: string | null
+  changed_at: string | null
+  changed_by?: AdmUserSummary | null
+}
+
+export interface AdmAssignment {
+  id: number
+  note: string | null
+  assigned_at: string | null
+  released_at: string | null
+  assignee?: AdmUserSummary | null
+  assigned_by?: AdmUserSummary | null
+}
+
+export interface AdmRequest {
+  id: number
+  reference: string
+  employee_id: string | null
+  employee_name: string | null
+  department_name: string | null
+  designation: string | null
+  subject: string
+  /** Present on detail payloads only. */
+  description?: string
+  required_date: string | null
+  company_name: string | null
+  is_overdue?: boolean
+  awaiting_verification?: boolean
+  assigned_to_team?: boolean
+  due_at: string | null
+  created_at: string | null
+  updated_at: string | null
+  resolution_summary?: string | null
+  resolved_at?: string | null
+  closed_at?: string | null
+  verification?: {
+    status?: string | null
+    completed_at?: string | null
+  } | null
+  category?: AdmCategory
+  request_type?: AdmRequestType
+  status?: AdmStatus
+  branch?: { id: number; name: string } | null
+  assignee?: AdmUserSummary | null
+  resolved_by?: AdmUserSummary | null
+  requester?: AdmUserSummary | null
+  attachments?: AdmAttachment[]
+  comments?: AdmComment[]
+  timeline?: AdmStatusHistoryEntry[]
+  /** Staff payload extras. */
+  assigned_at?: string | null
+  assignments?: AdmAssignment[]
+  /** Category-specific fields, e.g. CCTV location and footage window. Detail payloads only. */
+  details?: Record<string, string> | null
+  /** CCTV category only, staff payloads. */
+  cctv_approval?: {
+    id: number
+    status: 'pending' | 'approved' | 'rejected'
+    decided_at: string | null
+    decision_notes: string | null
+    decided_by: { id: number; full_name: string } | null
+  } | null
+}
+
+export interface AdmAttachmentConstraints {
+  max_kilobytes: number
+  max_per_request: number
+  allowed_extensions: string[]
+}
+
+export interface AdmLookups {
+  categories: AdmCategory[]
+  statuses: AdmStatus[]
+  attachments: AdmAttachmentConstraints
+  support_email?: string
+  support_phone?: string
+  support_hours?: string
+}
+
+export interface AdmEmployeeDashboardStatistics {
+  total: number
+  open: number
+  in_progress: number
+  awaiting_verification: number
+  closed: number
+}
+
+export interface AdmEmployeeDashboardOverview {
+  statistics: AdmEmployeeDashboardStatistics
+  recent_requests: AdmRequest[]
+}
+
+export interface AdmDashboardStatistics {
+  total: number
+  pending: number
+  in_progress: number
+  completed: number
+  overdue: number
+}
+
+export interface AdmDashboardCategoryCount {
+  id: number
+  slug: string
+  name: string
+  count: number
+}
+
+export interface AdmDashboardStatusCount {
+  id: number
+  slug: string
+  name: string
+  color_token: ColorToken
+  count: number
+}
+
+export interface AdmDashboardOverview {
+  statistics: AdmDashboardStatistics
+  by_category: AdmDashboardCategoryCount[]
+  by_status: AdmDashboardStatusCount[]
+  recent_requests: AdmRequest[]
 }

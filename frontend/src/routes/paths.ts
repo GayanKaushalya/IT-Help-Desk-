@@ -59,5 +59,28 @@ export const paths = {
     },
   },
 
+  administration: {
+    desks: '/desks',
+    index: '/administration',
+    submit: '/administration/requests/create',
+    requests: '/administration/requests',
+    profile: '/administration/profile',
+    detail: (id: number | string = ':id') => `/administration/requests/${id}`,
+    admin: {
+      index: '/administration/admin',
+      requests: '/administration/admin/requests',
+      assigned: '/administration/admin/requests/assigned',
+      insurance: '/administration/admin/insurance',
+      vehicles: '/administration/admin/vehicles',
+      drivers: '/administration/admin/drivers',
+      fuelCards: '/administration/admin/fuel-cards',
+      /** All Requests pre-filtered to one category (by slug). */
+      category: (slug: string) => `/administration/admin/requests?category=${encodeURIComponent(slug)}`,
+      reports: '/administration/admin/reports',
+      settings: '/administration/admin/settings',
+      requestDetail: (id: number | string = ':id') => `/administration/admin/requests/${id}`,
+    },
+  },
+
   designSystem: '/design-system',
 } as const
