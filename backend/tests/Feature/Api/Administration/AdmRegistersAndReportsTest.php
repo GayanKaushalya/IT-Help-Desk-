@@ -164,6 +164,7 @@ class AdmRegistersAndReportsTest extends TestCase
             'request_type_id' => $category->requestTypes()->value('id'),
             'subject' => 'Report test request',
             'description' => 'A request that should be counted in reports.',
+            'contact_phone' => '0771234567',
         ])->assertCreated();
 
         Sanctum::actingAs($this->manager);

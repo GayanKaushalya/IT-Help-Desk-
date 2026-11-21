@@ -48,6 +48,7 @@ class AdmRequestResource extends JsonResource
             'employee_name' => $this->employee_name,
             'department_name' => $this->department_name,
             'designation' => $this->designation,
+            'contact_phone' => $this->contact_phone,
             'subject' => $this->subject,
             'description' => $this->when($detail, $this->description),
             'required_date' => $this->required_date?->toDateString(),
@@ -62,6 +63,7 @@ class AdmRequestResource extends JsonResource
             'resolution_summary' => $this->when($detail, $this->resolution_summary),
             'resolved_at' => $this->when($detail, $this->resolved_at?->toIso8601String()),
             'closed_at' => $this->when($detail, $this->closed_at?->toIso8601String()),
+            'verification_due_at' => $this->when($detail, $this->verification_due_at?->toIso8601String()),
             'verification' => $this->when($detail || $awaitingVerification, [
                 'status' => $verificationStatus,
                 'completed_at' => $this->closed_at?->toIso8601String(),
@@ -78,6 +80,10 @@ class AdmRequestResource extends JsonResource
             'resolved_by' => $this->when(
                 $detail && $this->relationLoaded('resolver'),
                 fn () => $this->resolver ? new AdmUserResource($this->resolver) : null,
+            ),
+            'closed_by' => $this->when(
+                $detail && $this->relationLoaded('closer'),
+                fn () => $this->closer ? new AdmUserResource($this->closer) : null,
             ),
             'requester' => $this->whenLoaded('requester', fn () => $this->requester ? new AdmUserResource($this->requester) : null),
             'attachments' => AdmAttachmentResource::collection($this->whenLoaded('attachments')),

@@ -584,6 +584,7 @@ export interface HrRequest {
   employee_name: string | null
   department_name: string | null
   designation: string | null
+  contact_phone?: string | null
   /** Present on detail payloads only. */
   description?: string
   is_confidential: boolean
@@ -856,6 +857,7 @@ export interface AdmRequest {
   employee_name: string | null
   department_name: string | null
   designation: string | null
+  contact_phone?: string | null
   subject: string
   /** Present on detail payloads only. */
   description?: string

@@ -44,6 +44,7 @@ class StoreHrRequestRequest extends ApiFormRequest
             'employee_name' => ['nullable', 'string', 'min:2', 'max:150'],
             'department_name' => ['nullable', 'string', 'max:120'],
             'designation' => ['nullable', 'string', 'max:100'],
+            'contact_phone' => ['required', 'string', 'min:7', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
             'attachments' => ['nullable', 'array', 'max:'.$maxFiles],
             'attachments.*' => ['file', 'max:'.$maxKilobytes, 'mimes:'.$extensions, 'mimetypes:'.$mimes],
         ];
@@ -61,6 +62,8 @@ class StoreHrRequestRequest extends ApiFormRequest
             'request_type_id.exists' => 'The selected request type is not available for this category.',
             'description.required' => 'Describe your request.',
             'description.min' => 'Please give a little more detail (at least 10 characters).',
+            'contact_phone.required' => 'Enter a phone number so HR can contact you.',
+            'contact_phone.regex' => 'Enter a valid phone number.',
             'attachments.max' => 'Too many files were attached.',
             'attachments.*.file' => 'Each attachment must be a valid file.',
             'attachments.*.max' => 'Each file is larger than the allowed size.',
@@ -73,7 +76,7 @@ class StoreHrRequestRequest extends ApiFormRequest
     {
         $merge = [];
 
-        foreach (['description', 'employee_id', 'employee_name', 'department_name', 'designation'] as $field) {
+        foreach (['description', 'employee_id', 'employee_name', 'department_name', 'designation', 'contact_phone'] as $field) {
             if (is_string($this->input($field))) {
                 $value = trim($this->input($field));
                 $merge[$field] = $value === '' ? null : $value;
@@ -96,7 +99,8 @@ class StoreHrRequestRequest extends ApiFormRequest
      *     employee_id: ?string,
      *     employee_name: ?string,
      *     department_name: ?string,
-     *     designation: ?string
+     *     designation: ?string,
+     *     contact_phone: string
      * }
      */
     public function requestData(): array
@@ -111,6 +115,7 @@ class StoreHrRequestRequest extends ApiFormRequest
             'employee_name' => isset($validated['employee_name']) ? (string) $validated['employee_name'] : null,
             'department_name' => isset($validated['department_name']) ? (string) $validated['department_name'] : null,
             'designation' => isset($validated['designation']) ? (string) $validated['designation'] : null,
+            'contact_phone' => (string) $validated['contact_phone'],
         ];
     }
 

@@ -180,6 +180,7 @@ export function AdmRequestDetailPage() {
                 </DescriptionItem>
                 <DescriptionItem label="Category">{request.category?.name}</DescriptionItem>
                 <DescriptionItem label="Request type">{request.request_type?.name}</DescriptionItem>
+                <DescriptionItem label="Phone">{request.contact_phone || '—'}</DescriptionItem>
                 {request.company_name && <DescriptionItem label="Company">{request.company_name}</DescriptionItem>}
                 {request.required_date && (
                   <DescriptionItem label="Required date">{formatDate(request.required_date)}</DescriptionItem>

@@ -180,6 +180,7 @@ export function HrRequestDetailPage() {
                 </DescriptionItem>
                 <DescriptionItem label="Category">{request.category?.name}</DescriptionItem>
                 <DescriptionItem label="Request type">{request.request_type?.name}</DescriptionItem>
+                <DescriptionItem label="Phone">{request.contact_phone || '—'}</DescriptionItem>
                 <DescriptionItem label="Assigned to">{hrAssigneeLabel(request)}</DescriptionItem>
                 <DescriptionItem label="Submitted">{formatDateTime(request.created_at)}</DescriptionItem>
                 <DescriptionItem label="Target date">{formatDateTime(request.due_at)}</DescriptionItem>

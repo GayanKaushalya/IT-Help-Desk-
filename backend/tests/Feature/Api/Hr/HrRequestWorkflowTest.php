@@ -37,6 +37,9 @@ class HrRequestWorkflowTest extends TestCase
     {
         parent::setUp();
 
+        // Factory users have random names; do not restrict the HR desk to named staff.
+        config(['hr.assignable_name_keywords' => []]);
+
         $this->seed([
             PermissionSeeder::class,
             RoleSeeder::class,
@@ -60,6 +63,7 @@ class HrRequestWorkflowTest extends TestCase
             'category_id' => $this->category->id,
             'request_type_id' => $this->type->id,
             'description' => 'I need a letter confirming my employment for the bank.',
+            'contact_phone' => '0771234567',
         ])->assertCreated();
 
         $id = $response->json('data.id');
@@ -144,6 +148,7 @@ class HrRequestWorkflowTest extends TestCase
             'category_id' => $this->category->id,
             'request_type_id' => $this->type->id,
             'description' => 'Need help updating my emergency contact details today.',
+            'contact_phone' => '0771234567',
         ])->assertCreated()->json('data.id');
 
         $request = HrRequest::query()->findOrFail($id);
@@ -169,6 +174,7 @@ class HrRequestWorkflowTest extends TestCase
             'category_id' => $this->category->id,
             'request_type_id' => $this->type->id,
             'description' => 'I need a letter confirming my employment for the bank.',
+            'contact_phone' => '0771234567',
         ])->assertCreated()->json('data.id');
 
         Sanctum::actingAs($this->officer);

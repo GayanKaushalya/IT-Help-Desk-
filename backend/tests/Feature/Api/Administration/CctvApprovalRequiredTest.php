@@ -58,6 +58,7 @@ class CctvApprovalRequiredTest extends TestCase
             'request_type_id' => $type->id,
             'subject' => 'Footage for lobby incident',
             'description' => 'Need lobby camera footage from 2pm to 3pm yesterday.',
+            'contact_phone' => '0771234567',
             'details' => ['location' => 'Main lobby', 'footage_from' => '2030-01-01 14:00', 'footage_to' => '2030-01-01 15:00'],
         ])->assertCreated()->json('data.id');
 
@@ -170,6 +171,7 @@ class CctvApprovalRequiredTest extends TestCase
             'request_type_id' => $type->id,
             'subject' => 'My own footage request',
             'description' => 'Manager requesting footage for an audit.',
+            'contact_phone' => '0771234567',
         ])->assertCreated()->json('data.id');
 
         $this->postJson(self::STAFF.$id.'/cctv/approve')->assertForbidden();

@@ -49,6 +49,7 @@ class HrRequestResource extends JsonResource
             'employee_name' => $this->employee_name,
             'department_name' => $this->department_name,
             'designation' => $this->designation,
+            'contact_phone' => $this->contact_phone,
             'description' => $this->when($detail, $this->description),
             'is_confidential' => $this->is_confidential,
             'is_overdue' => $this->whenLoaded('status', fn () => $this->isOverdue()),
@@ -60,6 +61,7 @@ class HrRequestResource extends JsonResource
             'resolution_summary' => $this->when($detail, $this->resolution_summary),
             'resolved_at' => $this->when($detail, $this->resolved_at?->toIso8601String()),
             'closed_at' => $this->when($detail, $this->closed_at?->toIso8601String()),
+            'verification_due_at' => $this->when($detail, $this->verification_due_at?->toIso8601String()),
             'verification' => $this->when($detail || $awaitingVerification, [
                 'status' => $verificationStatus,
                 'completed_at' => $this->closed_at?->toIso8601String(),
@@ -76,6 +78,10 @@ class HrRequestResource extends JsonResource
             'resolved_by' => $this->when(
                 $detail && $this->relationLoaded('resolver'),
                 fn () => $this->resolver ? new HrUserResource($this->resolver) : null,
+            ),
+            'closed_by' => $this->when(
+                $detail && $this->relationLoaded('closer'),
+                fn () => $this->closer ? new HrUserResource($this->closer) : null,
             ),
             'requester' => $this->whenLoaded('requester', fn () => $this->requester ? new HrUserResource($this->requester) : null),
             'attachments' => HrAttachmentResource::collection($this->whenLoaded('attachments')),

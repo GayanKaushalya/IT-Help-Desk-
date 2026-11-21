@@ -88,6 +88,7 @@ class AdmRequestWorkflowTest extends TestCase
             'request_type_id' => $this->type->id,
             'subject' => 'Vehicle policy renewal',
             'description' => 'Please renew the insurance policy for the delivery van.',
+            'contact_phone' => '0771234567',
             'company_name' => 'Acme Insurance',
             'required_date' => now()->addWeek()->toDateString(),
         ])->assertCreated()
@@ -265,6 +266,7 @@ class AdmRequestWorkflowTest extends TestCase
             'request_type_id' => $this->type->id,
             'subject' => 'Policy expiry question',
             'description' => 'When does the fleet policy expire next year?',
+            'contact_phone' => '0771234567',
         ])->assertCreated()->json('data.id');
 
         return AdmRequest::query()->findOrFail($id);

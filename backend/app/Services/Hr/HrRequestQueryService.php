@@ -152,6 +152,7 @@ class HrRequestQueryService
             'status',
             'assignee.role',
             'resolver.role',
+            'closer.role',
             'requester.role',
             'branch',
             'attachments',

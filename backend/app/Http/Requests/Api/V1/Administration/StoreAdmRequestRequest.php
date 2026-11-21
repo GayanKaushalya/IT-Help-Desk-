@@ -47,6 +47,7 @@ class StoreAdmRequestRequest extends ApiFormRequest
             'employee_name' => ['nullable', 'string', 'min:2', 'max:150'],
             'department_name' => ['nullable', 'string', 'max:120'],
             'designation' => ['nullable', 'string', 'max:100'],
+            'contact_phone' => ['required', 'string', 'min:7', 'max:30', 'regex:/^[0-9+\-\s()]+$/'],
             'details' => ['nullable', 'array', 'max:20'],
             'details.*' => ['nullable', 'string', 'max:500'],
             'attachments' => ['nullable', 'array', 'max:'.$maxFiles],
@@ -69,6 +70,8 @@ class StoreAdmRequestRequest extends ApiFormRequest
             'required_date.after_or_equal' => 'The required date cannot be in the past.',
             'description.required' => 'Describe your request.',
             'description.min' => 'Please give a little more detail (at least 10 characters).',
+            'contact_phone.required' => 'Enter a phone number so Administration can contact you.',
+            'contact_phone.regex' => 'Enter a valid phone number.',
             'attachments.max' => 'Too many files were attached.',
             'attachments.*.file' => 'Each attachment must be a valid file.',
             'attachments.*.max' => 'Each file is larger than the allowed size.',
@@ -81,7 +84,7 @@ class StoreAdmRequestRequest extends ApiFormRequest
     {
         $merge = [];
 
-        foreach (['subject', 'description', 'required_date', 'company_name', 'employee_id', 'employee_name', 'department_name', 'designation'] as $field) {
+        foreach (['subject', 'description', 'required_date', 'company_name', 'employee_id', 'employee_name', 'department_name', 'designation', 'contact_phone'] as $field) {
             if (is_string($this->input($field))) {
                 $value = trim($this->input($field));
                 $merge[$field] = $value === '' ? null : $value;
@@ -108,6 +111,7 @@ class StoreAdmRequestRequest extends ApiFormRequest
      *     employee_name: ?string,
      *     department_name: ?string,
      *     designation: ?string,
+     *     contact_phone: string,
      *     details: ?array<string, string>
      * }
      */
@@ -126,6 +130,7 @@ class StoreAdmRequestRequest extends ApiFormRequest
             'employee_name' => isset($validated['employee_name']) ? (string) $validated['employee_name'] : null,
             'department_name' => isset($validated['department_name']) ? (string) $validated['department_name'] : null,
             'designation' => isset($validated['designation']) ? (string) $validated['designation'] : null,
+            'contact_phone' => (string) $validated['contact_phone'],
             'details' => isset($validated['details']) && is_array($validated['details']) ? $validated['details'] : null,
         ];
     }

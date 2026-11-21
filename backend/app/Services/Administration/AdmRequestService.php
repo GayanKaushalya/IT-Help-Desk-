@@ -63,7 +63,8 @@ class AdmRequestService
      *     employee_id?: ?string,
      *     employee_name?: ?string,
      *     department_name?: ?string,
-     *     designation?: ?string
+     *     designation?: ?string,
+     *     contact_phone?: ?string
      * }  $data
      * @param  array<int, UploadedFile>  $files
      */
@@ -673,7 +674,8 @@ class AdmRequestService
      *     employee_id?: ?string,
      *     employee_name?: ?string,
      *     department_name?: ?string,
-     *     designation?: ?string
+     *     designation?: ?string,
+     *     contact_phone?: ?string
      * }  $data
      */
     private function insertWithUniqueReference(
@@ -697,6 +699,7 @@ class AdmRequestService
                     'employee_name' => (string) (($data['employee_name'] ?? null) ?: $user->full_name),
                     'department_name' => ($data['department_name'] ?? null) ?: $user->department?->name,
                     'designation' => ($data['designation'] ?? null) ?: ($attributes['job_title'] ?? null),
+                    'contact_phone' => ($data['contact_phone'] ?? null) ?: ($attributes['phone'] ?? null),
                     'branch_id' => $attributes['branch_id'] ?? null,
                     'department_id' => $attributes['department_id'] ?? null,
                     'adm_category_id' => $category->id,

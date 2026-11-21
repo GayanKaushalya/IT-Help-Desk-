@@ -22,6 +22,7 @@ class HrRequest extends Model
         'employee_name',
         'department_name',
         'designation',
+        'contact_phone',
         'branch_id',
         'department_id',
         'hr_category_id',
@@ -39,6 +40,7 @@ class HrRequest extends Model
         'resolved_at',
         'closed_by',
         'closed_at',
+        'verification_due_at',
     ];
 
     protected function casts(): array
@@ -60,6 +62,7 @@ class HrRequest extends Model
             'resolved_at' => 'datetime',
             'closed_by' => 'integer',
             'closed_at' => 'datetime',
+            'verification_due_at' => 'datetime',
         ];
     }
 

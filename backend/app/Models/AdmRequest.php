@@ -23,6 +23,7 @@ class AdmRequest extends Model
         'employee_name',
         'department_name',
         'designation',
+        'contact_phone',
         'branch_id',
         'department_id',
         'adm_category_id',
@@ -40,6 +41,7 @@ class AdmRequest extends Model
         'resolved_at',
         'closed_by',
         'closed_at',
+        'verification_due_at',
         'details',
     ];
 
@@ -60,6 +62,7 @@ class AdmRequest extends Model
             'resolved_at' => 'datetime',
             'closed_by' => 'integer',
             'closed_at' => 'datetime',
+            'verification_due_at' => 'datetime',
             'details' => 'array',
         ];
     }

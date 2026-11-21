@@ -225,6 +225,7 @@ export function HrAdminRequestWorkspacePage() {
                 </DescriptionItem>
                 <DescriptionItem label="Department">{request.department_name}</DescriptionItem>
                 <DescriptionItem label="Designation">{request.designation}</DescriptionItem>
+                <DescriptionItem label="Phone">{request.contact_phone || '—'}</DescriptionItem>
                 <DescriptionItem label="Branch">{request.branch?.name}</DescriptionItem>
               </DescriptionList>
             </CardContent>

@@ -144,6 +144,7 @@ class AdmQueryService
             'status',
             'assignee.role',
             'resolver.role',
+            'closer.role',
             'requester.role',
             'branch',
             'attachments',

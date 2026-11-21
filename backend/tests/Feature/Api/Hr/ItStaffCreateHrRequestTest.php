@@ -48,6 +48,7 @@ class ItStaffCreateHrRequestTest extends TestCase
             'category_id' => $category->id,
             'request_type_id' => $type->id,
             'description' => 'I need a letter confirming my employment for a bank loan.',
+            'contact_phone' => '0771234567',
         ])->assertCreated();
 
         $response->assertJsonPath('data.requester.id', $admin->id);
@@ -70,6 +71,7 @@ class ItStaffCreateHrRequestTest extends TestCase
             'category_id' => $category->id,
             'request_type_id' => $type->id,
             'description' => 'Please update my emergency contact details on file.',
+            'contact_phone' => '0771234567',
         ])
             ->assertCreated()
             ->assertJsonPath('data.requester.id', $technician->id);

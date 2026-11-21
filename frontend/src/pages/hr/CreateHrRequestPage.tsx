@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/Textarea'
 import { HrStatusBadge } from '@/features/hr/HrStatusBadge'
 import { useHrLookups, useInvalidateEmployeeHr } from '@/features/hr/useHr'
 import { FileUpload, type SelectedFile } from '@/features/tickets/FileUpload'
+import { PHONE_MAX, PHONE_PATTERN } from '@/features/tickets/createTicketValidation'
 import { useAuth } from '@/hooks/useAuth'
 import { usePauseLiveRefresh } from '@/hooks/useLiveRefreshGuard'
 import { useToast } from '@/hooks/useToast'
@@ -41,6 +42,7 @@ export function CreateHrRequestPage() {
   const [employeeName, setEmployeeName] = useState(user?.full_name ?? '')
   const [departmentName, setDepartmentName] = useState(user?.department?.name ?? '')
   const [designation, setDesignation] = useState(user?.job_title ?? '')
+  const [contactPhone, setContactPhone] = useState(user?.phone ?? '')
   const [files, setFiles] = useState<SelectedFile[]>([])
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [formError, setFormError] = useState<string | null>(null)
@@ -56,6 +58,7 @@ export function CreateHrRequestPage() {
     setEmployeeName((current) => current || user.full_name || '')
     setDepartmentName((current) => current || user.department?.name || '')
     setDesignation((current) => current || user.job_title || '')
+    setContactPhone((current) => current || user.phone || '')
   }, [user])
 
   const selectedCategory = useMemo(
@@ -86,6 +89,12 @@ export function CreateHrRequestPage() {
 
     if (!employeeId.trim()) errors.employee_id = 'Enter your employee ID.'
     if (!employeeName.trim()) errors.employee_name = 'Enter your name.'
+    const phone = contactPhone.trim()
+    if (!phone) {
+      errors.contact_phone = 'Enter a phone number so HR can contact you.'
+    } else if (phone.length < 7 || phone.length > PHONE_MAX || !PHONE_PATTERN.test(phone)) {
+      errors.contact_phone = 'Enter a valid phone number.'
+    }
     if (!categoryId) errors.category_id = 'Select a category.'
     if (!typeId) errors.request_type_id = 'Select a request type.'
 
@@ -117,6 +126,7 @@ export function CreateHrRequestPage() {
     body.append('employee_name', employeeName.trim())
     if (departmentName.trim()) body.append('department_name', departmentName.trim())
     if (designation.trim()) body.append('designation', designation.trim())
+    body.append('contact_phone', contactPhone.trim())
     files.forEach((item) => body.append('attachments[]', item.file))
 
     setIsSubmitting(true)
@@ -154,6 +164,7 @@ export function CreateHrRequestPage() {
     setEmployeeName(user?.full_name ?? '')
     setDepartmentName(user?.department?.name ?? '')
     setDesignation(user?.job_title ?? '')
+    setContactPhone(user?.phone ?? '')
     setFiles([])
     setFieldErrors({})
     setFormError(null)
@@ -312,6 +323,29 @@ export function CreateHrRequestPage() {
                     clearError('designation')
                   }}
                   placeholder="e.g. Accounts Clerk"
+                  disabled={isSubmitting}
+                />
+              )}
+            </FormField>
+            <FormField
+              label="Phone number"
+              required
+              error={fieldErrors.contact_phone}
+              hint="HR will use this number to contact you about the request."
+            >
+              {({ id, hasError }) => (
+                <Input
+                  id={id}
+                  hasError={hasError}
+                  type="tel"
+                  inputMode="tel"
+                  maxLength={PHONE_MAX}
+                  value={contactPhone}
+                  onChange={(event) => {
+                    setContactPhone(event.target.value)
+                    clearError('contact_phone')
+                  }}
+                  placeholder="e.g. 077 123 4567"
                   disabled={isSubmitting}
                 />
               )}
