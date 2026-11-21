@@ -8,6 +8,7 @@ use App\Http\Middleware\ForceJsonResponse;
 use App\Support\ApiResponse;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -29,8 +30,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         apiPrefix: 'api',
     )
-    ->withSchedule(function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+    ->withSchedule(function (Schedule $schedule): void {
         $schedule->command('hr:escalate-overdue')->hourly();
+        $schedule->command('helpdesk:close-expired-verifications')->hourly()->withoutOverlapping();
         $schedule->command('adm:insurance-reminders')->dailyAt('08:00')->withoutOverlapping();
     })
     ->withMiddleware(function (Middleware $middleware): void {

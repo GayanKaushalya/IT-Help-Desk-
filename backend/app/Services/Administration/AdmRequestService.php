@@ -20,11 +20,13 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use RuntimeException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 /**
  * Writes Administration requests and their workflow (assignment, status, resolution).
@@ -607,6 +609,102 @@ class AdmRequestService
         $this->notifications->admRequestClosed($updated, $actor);
 
         return $updated;
+    }
+
+    /**
+     * Closes resolved requests whose employee verification window has lapsed,
+     * recording the requester as the closer — same outcome as a confirmation.
+     *
+     * @return array{examined: int, closed: int}
+     */
+    public function closeExpiredVerifications(): array
+    {
+        $ids = AdmRequest::query()
+            ->whereNull('closed_at')
+            ->whereNotNull('verification_due_at')
+            ->where('verification_due_at', '<=', now())
+            ->whereHas('status', fn ($status) => $status->where('slug', 'resolved'))
+            ->orderBy('id')
+            ->pluck('id');
+
+        $closed = 0;
+
+        foreach ($ids as $id) {
+            try {
+                if ($this->autoCloseExpired((int) $id)) {
+                    $closed++;
+                }
+            } catch (Throwable $exception) {
+                Log::warning('Administration request could not be closed automatically.', [
+                    'request_id' => $id,
+                    'error' => $exception->getMessage(),
+                ]);
+            }
+        }
+
+        return ['examined' => $ids->count(), 'closed' => $closed];
+    }
+
+    private function autoCloseExpired(int $id): bool
+    {
+        $closed = AdmRequestStatus::query()->where('slug', 'closed')->first();
+
+        if (! $closed) {
+            throw new RuntimeException('The Administration request statuses have not been seeded.');
+        }
+
+        $updated = DB::transaction(function () use ($id, $closed): ?AdmRequest {
+            $request = AdmRequest::query()->whereKey($id)->lockForUpdate()->first();
+
+            if (! $request) {
+                return null;
+            }
+
+            $request->loadMissing(['status', 'requester']);
+
+            // Re-check under the lock: the employee may have answered meanwhile.
+            if (
+                $request->status?->slug !== 'resolved'
+                || $request->closed_at !== null
+                || $request->verification_due_at === null
+                || $request->verification_due_at->isFuture()
+                || ! $request->requester
+            ) {
+                return null;
+            }
+
+            $requester = $request->requester;
+
+            $request->forceFill([
+                'closed_by' => $requester->id,
+                'closed_at' => now(),
+                'verification_due_at' => null,
+            ]);
+            $this->moveToStatus(
+                $request,
+                $closed,
+                $requester,
+                'Automatically closed after '.self::VERIFICATION_WINDOW_DAYS.' days awaiting employee verification.',
+            );
+
+            $this->audit->log(
+                event: 'adm_request.auto_closed',
+                subject: $request,
+                newValues: ['status' => 'closed', 'closed_by' => $requester->id, 'automatic' => true],
+                description: $request->reference.' was closed automatically after '.self::VERIFICATION_WINDOW_DAYS.' days awaiting employee verification',
+            );
+
+            return $request->fresh() ?? $request;
+        });
+
+        if (! $updated) {
+            return false;
+        }
+
+        $updated->load(['requester', 'assignee', 'status', 'assignments']);
+        $this->notifications->admRequestClosed($updated, $updated->requester, true);
+
+        return true;
     }
 
     private function claimIfUnassigned(AdmRequest $request, User $actor): AdmRequest

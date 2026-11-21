@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UserNotification;
 use App\Services\Administration\AdmRequestService;
 use App\Services\Hr\HrRequestService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -429,23 +430,28 @@ class NotificationService
         );
     }
 
-    public function hrRequestClosed(HrRequest $request, User $actor): void
+    /**
+     * @param  bool  $automatic  The verification window lapsed and the system closed the request on the employee's behalf.
+     */
+    public function hrRequestClosed(HrRequest $request, User $actor, bool $automatic = false): void
     {
         $request->loadMissing(['requester', 'assignee', 'status']);
         $payload = $this->hrPayload($request);
         $statusName = strtolower($request->status?->name ?? 'closed');
 
-        if ($request->requester && $request->requester->id !== $actor->id) {
+        if ($request->requester && ($automatic || $request->requester->id !== $actor->id)) {
             $this->notify(
                 $request->requester,
                 'hr.request.closed',
                 'HR request '.$statusName,
-                $request->reference.' has been '.$statusName.'.',
+                $automatic
+                    ? $request->reference.' was closed automatically after '.HrRequestService::VERIFICATION_WINDOW_DAYS.' days without confirmation.'
+                    : $request->reference.' has been '.$statusName.'.',
                 $payload,
             );
         }
 
-        // The employee verified the resolution: the whole desk hears about it.
+        // The employee verified (or the window lapsed): the whole desk hears about it.
         if ($request->status?->slug === 'closed' && (int) $request->requester_id === (int) $actor->id) {
             $this->notifyMany(
                 $this->hrStaffFor($request, $actor->id)
@@ -454,8 +460,10 @@ class NotificationService
                     ->unique('id')
                     ->values(),
                 'hr.request.verified',
-                'Verified by employee',
-                $actor->full_name.' verified and closed '.$request->reference.'.',
+                $automatic ? 'Closed automatically' : 'Verified by employee',
+                $automatic
+                    ? $request->reference.' was closed automatically after '.HrRequestService::VERIFICATION_WINDOW_DAYS.' days awaiting verification from '.$actor->full_name.'.'
+                    : $actor->full_name.' verified and closed '.$request->reference.'.',
                 $payload,
             );
 
@@ -684,23 +692,28 @@ class NotificationService
         );
     }
 
-    public function admRequestClosed(AdmRequest $request, User $actor): void
+    /**
+     * @param  bool  $automatic  The verification window lapsed and the system closed the request on the employee's behalf.
+     */
+    public function admRequestClosed(AdmRequest $request, User $actor, bool $automatic = false): void
     {
         $request->loadMissing(['requester', 'assignee', 'status']);
         $payload = $this->admPayload($request);
         $statusName = strtolower($request->status?->name ?? 'closed');
 
-        if ($request->requester && $request->requester->id !== $actor->id) {
+        if ($request->requester && ($automatic || $request->requester->id !== $actor->id)) {
             $this->notify(
                 $request->requester,
                 'adm.request.closed',
                 'Administration request '.$statusName,
-                $request->reference.' has been '.$statusName.'.',
+                $automatic
+                    ? $request->reference.' was closed automatically after '.AdmRequestService::VERIFICATION_WINDOW_DAYS.' days without confirmation.'
+                    : $request->reference.' has been '.$statusName.'.',
                 $payload,
             );
         }
 
-        // The employee verified the resolution: the whole desk hears about it.
+        // The employee verified (or the window lapsed): the whole desk hears about it.
         if ($request->status?->slug === 'closed' && (int) $request->requester_id === (int) $actor->id) {
             $this->notifyMany(
                 $this->admStaffFor($request, $actor->id)
@@ -709,8 +722,10 @@ class NotificationService
                     ->unique('id')
                     ->values(),
                 'adm.request.verified',
-                'Verified by employee',
-                $actor->full_name.' verified and closed '.$request->reference.'.',
+                $automatic ? 'Closed automatically' : 'Verified by employee',
+                $automatic
+                    ? $request->reference.' was closed automatically after '.AdmRequestService::VERIFICATION_WINDOW_DAYS.' days awaiting verification from '.$actor->full_name.'.'
+                    : $actor->full_name.' verified and closed '.$request->reference.'.',
                 $payload,
             );
 
@@ -786,7 +801,7 @@ class NotificationService
      * Filter by type prefix only — SQL Server does not support Laravel's
      * data->json path helpers used elsewhere on MySQL.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\UserNotification>|\Illuminate\Database\Query\Builder  $query
+     * @param  Builder<UserNotification>|\Illuminate\Database\Query\Builder  $query
      * @param  'it'|'hr'|'administration'|null  $module
      */
     private function applyModuleFilter($query, ?string $module): void
@@ -878,6 +893,7 @@ class NotificationService
             'reference' => (string) $request->reference,
         ];
     }
+
     /**
      * @return array{module: string, ticket_id: int, reference: string}
      */

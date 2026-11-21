@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Support;
 
-use App\Models\Branch;
 use App\Models\AdmRequest;
+use App\Models\Branch;
 use App\Models\HrRequest;
 use App\Models\KnowledgeArticle;
 use App\Models\Ticket;
@@ -59,12 +59,14 @@ final class AuditEvent
             'hr_request.status_changed' => 'HR request status changed',
             'hr_request.referred' => 'HR request referred',
             'hr_request.referral_responded' => 'HR referral responded',
+            'hr_request.auto_closed' => 'HR request closed automatically',
             'adm_request.created' => 'Administration request created',
             'adm_request.assigned' => 'Administration request assigned',
             'adm_request.status_changed' => 'Administration request status changed',
             'adm_request.resolved' => 'Administration request resolved',
             'adm_request.verified' => 'Administration request verified',
             'adm_request.closed' => 'Administration request closed',
+            'adm_request.auto_closed' => 'Administration request closed automatically',
             'adm_request.verification_rejected' => 'Administration resolution rejected',
             'adm_request.comment_added' => 'Administration request comment added',
             'adm_request.internal_note_added' => 'Administration internal note added',
