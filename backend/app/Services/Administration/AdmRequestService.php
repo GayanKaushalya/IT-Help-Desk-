@@ -38,6 +38,9 @@ class AdmRequestService
     /** Statuses a freshly assigned request moves out of. */
     private const PRE_ASSIGNMENT_STATUSES = ['submitted', 'under-review'];
 
+    /** Days the employee has to confirm a resolution before it closes automatically. */
+    public const VERIFICATION_WINDOW_DAYS = 2;
+
     /** @var list<string> */
     private const BLOCKED_EXTENSIONS = [
         'exe', 'bat', 'cmd', 'com', 'cpl', 'dll', 'js', 'jse', 'msi', 'msp',
@@ -464,8 +467,9 @@ class AdmRequestService
             $request->forceFill([
                 'closed_by' => $actor->id,
                 'closed_at' => now(),
+                'verification_due_at' => null,
             ]);
-            $this->moveToStatus($request, $closed, $actor, 'Employee confirmed the resolution.');
+            $this->moveToStatus($request, $closed, $actor, 'Verified and closed by '.$actor->full_name.'.');
 
             $this->audit->log(
                 event: 'adm_request.verified',
@@ -517,6 +521,7 @@ class AdmRequestService
                 'resolved_at' => null,
                 'resolved_by' => null,
                 'resolution_summary' => $summary,
+                'verification_due_at' => null,
             ]);
             $this->moveToStatus(
                 $request,
@@ -580,6 +585,7 @@ class AdmRequestService
                 'resolution_summary' => $request->resolution_summary ?: 'Resolved by Administration.',
                 'closed_by' => $requesterId,
                 'closed_at' => $now,
+                'verification_due_at' => null,
             ]);
             $this->moveToStatus($request, $closed, $actor, 'Closed as verified by Administration on behalf of the employee.');
 
@@ -800,6 +806,7 @@ class AdmRequestService
                     'resolution_summary' => $note,
                     'resolved_by' => $actor->id,
                     'resolved_at' => now(),
+                    'verification_due_at' => now()->addDays(self::VERIFICATION_WINDOW_DAYS),
                 ];
                 break;
 
@@ -807,6 +814,7 @@ class AdmRequestService
                 $fields = [
                     'closed_by' => $actor->id,
                     'closed_at' => now(),
+                    'verification_due_at' => null,
                 ];
 
                 if ($request->resolved_at === null) {
@@ -824,13 +832,16 @@ class AdmRequestService
                     'resolution_summary' => $note,
                     'closed_by' => $actor->id,
                     'closed_at' => now(),
+                    'verification_due_at' => null,
                 ];
                 break;
 
             default:
                 // Reopening or continuing work clears any previous outcome.
+                $fields = ['verification_due_at' => null];
+
                 if ($request->resolved_at !== null) {
-                    $fields = [
+                    $fields += [
                         'resolution_summary' => null,
                         'resolved_by' => null,
                         'resolved_at' => null,

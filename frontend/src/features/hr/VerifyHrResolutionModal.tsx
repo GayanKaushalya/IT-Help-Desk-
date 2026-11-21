@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/useToast'
 import { hrService } from '@/services/hrService'
 import { ApiError } from '@/types/api'
 import type { HrRequest } from '@/types/models'
+import { formatDateTime } from '@/utils/format'
 
 function isAlreadyClosed(request: HrRequest | null | undefined): boolean {
   if (!request) return false
@@ -145,6 +146,14 @@ export function VerifyHrResolutionModal({
           Choose <strong>Yes, it is resolved</strong> to close the request, or{' '}
           <strong>Not resolved</strong> if HR still needs to help.
         </p>
+        <div className="rounded-lg border border-warning-200 bg-warning-50/70 px-3 py-2 text-sm text-surface-800">
+          <p className="font-medium">Please confirm within 2 days.</p>
+          {request.verification_due_at && (
+            <p className="mt-0.5 text-xs text-surface-600">
+              Due by {formatDateTime(request.verification_due_at)}. The request closes automatically if we do not hear back.
+            </p>
+          )}
+        </div>
       </div>
     </Modal>
   )

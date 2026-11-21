@@ -597,6 +597,8 @@ export interface HrRequest {
   resolution_summary?: string | null
   resolved_at?: string | null
   closed_at?: string | null
+  /** Employee must confirm before this time or the request closes automatically. Detail payloads only. */
+  verification_due_at?: string | null
   verification?: {
     status?: string | null
     completed_at?: string | null
@@ -607,6 +609,7 @@ export interface HrRequest {
   branch?: { id: number; name: string } | null
   assignee?: HrUserSummary | null
   resolved_by?: HrUserSummary | null
+  closed_by?: HrUserSummary | null
   requester?: HrUserSummary | null
   attachments?: HrAttachment[]
   comments?: HrComment[]
@@ -872,6 +875,8 @@ export interface AdmRequest {
   resolution_summary?: string | null
   resolved_at?: string | null
   closed_at?: string | null
+  /** Employee must confirm before this time or the request closes automatically. Detail payloads only. */
+  verification_due_at?: string | null
   verification?: {
     status?: string | null
     completed_at?: string | null
@@ -882,6 +887,7 @@ export interface AdmRequest {
   branch?: { id: number; name: string } | null
   assignee?: AdmUserSummary | null
   resolved_by?: AdmUserSummary | null
+  closed_by?: AdmUserSummary | null
   requester?: AdmUserSummary | null
   attachments?: AdmAttachment[]
   comments?: AdmComment[]

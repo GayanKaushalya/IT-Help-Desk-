@@ -12,6 +12,8 @@ use App\Models\HrRequestStatus;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Models\UserNotification;
+use App\Services\Administration\AdmRequestService;
+use App\Services\Hr\HrRequestService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -422,7 +424,7 @@ class NotificationService
             $request->requester,
             'hr.request.verification_required',
             'Please confirm resolution',
-            'Confirm whether '.$request->reference.' is resolved, or tell HR if you still need help.',
+            'Please confirm within '.HrRequestService::VERIFICATION_WINDOW_DAYS.' days whether '.$request->reference.' is resolved, or tell HR if you still need help. It closes automatically if we do not hear back.',
             $this->hrPayload($request),
         );
     }
@@ -441,6 +443,23 @@ class NotificationService
                 $request->reference.' has been '.$statusName.'.',
                 $payload,
             );
+        }
+
+        // The employee verified the resolution: the whole desk hears about it.
+        if ($request->status?->slug === 'closed' && (int) $request->requester_id === (int) $actor->id) {
+            $this->notifyMany(
+                $this->hrStaffFor($request, $actor->id)
+                    ->merge(collect([$request->assignee])->filter(fn ($user) => $user instanceof User))
+                    ->reject(fn (User $user) => $user->id === $actor->id)
+                    ->unique('id')
+                    ->values(),
+                'hr.request.verified',
+                'Verified by employee',
+                $actor->full_name.' verified and closed '.$request->reference.'.',
+                $payload,
+            );
+
+            return;
         }
 
         $staff = collect([$request->assignee])
@@ -660,7 +679,7 @@ class NotificationService
             $request->requester,
             'adm.request.verification_required',
             'Please confirm resolution',
-            'Confirm whether '.$request->reference.' is resolved, or tell Administration if you still need help.',
+            'Please confirm within '.AdmRequestService::VERIFICATION_WINDOW_DAYS.' days whether '.$request->reference.' is resolved, or tell Administration if you still need help. It closes automatically if we do not hear back.',
             $this->admPayload($request),
         );
     }
@@ -679,6 +698,23 @@ class NotificationService
                 $request->reference.' has been '.$statusName.'.',
                 $payload,
             );
+        }
+
+        // The employee verified the resolution: the whole desk hears about it.
+        if ($request->status?->slug === 'closed' && (int) $request->requester_id === (int) $actor->id) {
+            $this->notifyMany(
+                $this->admStaffFor($request, $actor->id)
+                    ->merge(collect([$request->assignee])->filter(fn ($user) => $user instanceof User))
+                    ->reject(fn (User $user) => $user->id === $actor->id)
+                    ->unique('id')
+                    ->values(),
+                'adm.request.verified',
+                'Verified by employee',
+                $actor->full_name.' verified and closed '.$request->reference.'.',
+                $payload,
+            );
+
+            return;
         }
 
         $staff = collect([$request->assignee])
